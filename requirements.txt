@@ -1,0 +1,7 @@
+Flask>=3.0,<4.0
+Flask-Login>=0.6.3,<0.7
+# Career Studio: private certificate files and PDF exports
+fpdf2>=2.7,<3.0
+# Resume analyzer text extraction (PDF and DOCX)
+PyMuPDF>=1.24,<2.0
+python-docx>=1.1,<2.0

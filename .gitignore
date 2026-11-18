@@ -1,0 +1,19 @@
+# Virtual environment (every developer creates their own)
+.venv/
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Local secrets and data - never upload these to GitHub
+instance/
+database/*.db
+.env
+
+# Editor / OS files
+.DS_Store
+Thumbs.db
+
+# Local development server log
+server.log
