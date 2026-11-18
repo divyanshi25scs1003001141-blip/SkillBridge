@@ -1,0 +1,171 @@
+/* =========================================================
+   tokens.css - the SkillBridge design tokens.
+
+   This is the single source of truth for colour, spacing,
+   shape, elevation and motion. Components in app.css never
+   hard-code a colour: they read these variables, which is why
+   a theme change is a variable swap and nothing else.
+
+   Load order:  style.css (reset + fonts) -> tokens.css -> app.css
+
+   Themes:
+     :root                     light canvas (default)
+     [data-theme="dark"]       dark canvas
+   The attribute can sit on <html> for the whole page, or on a
+   wrapper element (used by /design-system to show both at once).
+   ========================================================= */
+
+:root {
+    color-scheme: light;
+
+    /* ---------- Brand palette (fixed in both themes) ---------- */
+    --sb-navy: #101426;
+    --sb-indigo: #6558f5;
+    --sb-violet: #8b5cf6;
+    --sb-cyan: #22d3ee;
+    --sb-mint: #34d399;
+    --sb-coral: #fb7185;
+    --sb-amber: #fbbf24;
+    --sb-lavender: #c4b5fd;
+
+    /* ---------- Surfaces and text ---------- */
+    --sb-bg: #f7f8fc;
+    --sb-bg-glow-1: rgba(101, 88, 245, 0.10);
+    --sb-bg-glow-2: rgba(34, 211, 238, 0.10);
+    --sb-surface: #ffffff;
+    --sb-surface-2: #f2f4fb;
+    --sb-surface-3: #e9ecf7;
+    --sb-glass: rgba(255, 255, 255, 0.72);
+    --sb-line: #e6e9f3;
+    --sb-line-strong: #d3d8e9;
+    --sb-text: #101426;
+    --sb-text-soft: #3c4363;
+    --sb-muted: #6b7390;
+
+    /* ---------- Accents ---------- */
+    --sb-accent: #6558f5;
+    --sb-accent-strong: #5346e0;
+    --sb-accent-soft: rgba(101, 88, 245, 0.10);
+    --sb-accent-line: rgba(101, 88, 245, 0.28);
+    --sb-violet-ink: #7c3aed;
+    --sb-cyan-ink: #0891b2;
+
+    /* ---------- Status ---------- */
+    --sb-ok: #0e9f6e;
+    --sb-ok-soft: rgba(14, 159, 110, 0.12);
+    --sb-warn: #b45309;
+    --sb-warn-soft: rgba(251, 191, 36, 0.18);
+    --sb-danger: #e11d48;
+    --sb-danger-soft: rgba(225, 29, 72, 0.10);
+    --sb-info: #0e7490;
+    --sb-info-soft: rgba(34, 211, 238, 0.14);
+
+    /* ---------- Gradients (used sparingly: hero, primary CTA, charts) ---------- */
+    --sb-grad-brand: linear-gradient(135deg, #6558f5 0%, #8b5cf6 46%, #22d3ee 100%);
+    --sb-grad-cta: linear-gradient(135deg, #6558f5 0%, #8b5cf6 55%, #c084fc 100%);
+    --sb-grad-hero:
+        radial-gradient(680px 380px at 12% -20%, rgba(139, 92, 246, 0.22), transparent 65%),
+        radial-gradient(620px 380px at 92% 0%, rgba(34, 211, 238, 0.20), transparent 62%),
+        radial-gradient(520px 320px at 60% 120%, rgba(251, 113, 133, 0.16), transparent 66%);
+    --sb-grad-text: linear-gradient(96deg, #6558f5 0%, #8b5cf6 34%, #d946ef 66%, #22d3ee 100%);
+    --sb-grad-mint: linear-gradient(135deg, #34d399, #22d3ee);
+    --sb-grad-warm: linear-gradient(135deg, #fbbf24, #fb7185);
+
+    /* ---------- Elevation ---------- */
+    --sb-shadow-xs: 0 1px 2px rgba(16, 20, 38, 0.06);
+    --sb-shadow-sm: 0 2px 6px rgba(16, 20, 38, 0.06), 0 1px 2px rgba(16, 20, 38, 0.04);
+    --sb-shadow-md: 0 12px 28px -18px rgba(16, 20, 38, 0.28), 0 2px 6px rgba(16, 20, 38, 0.05);
+    --sb-shadow-lg: 0 32px 64px -34px rgba(24, 19, 66, 0.35), 0 6px 16px -10px rgba(16, 20, 38, 0.12);
+    --sb-glow-accent: 0 18px 38px -20px rgba(101, 88, 245, 0.55);
+
+    /* ---------- Spacing scale ---------- */
+    --sb-space-1: 4px;
+    --sb-space-2: 8px;
+    --sb-space-3: 12px;
+    --sb-space-4: 16px;
+    --sb-space-5: 24px;
+    --sb-space-6: 32px;
+    --sb-space-7: 48px;
+    --sb-space-8: 64px;
+
+    /* ---------- Shape ---------- */
+    --sb-r-xs: 6px;
+    --sb-r-sm: 9px;
+    --sb-r: 12px;
+    --sb-r-lg: 16px;
+    --sb-r-xl: 22px;
+    --sb-r-pill: 999px;
+
+    /* ---------- Type ---------- */
+    --sb-font-heading: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --sb-font-body: "Instrument Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --sb-text-xs: 0.76rem;
+    --sb-text-sm: 0.86rem;
+    --sb-text-base: 1rem;
+    --sb-text-lg: 1.08rem;
+
+    /* ---------- Motion ---------- */
+    --sb-fast: 140ms;
+    --sb-mid: 220ms;
+    --sb-slow: 380ms;
+    --sb-ease: cubic-bezier(0.22, 0.75, 0.2, 1);
+
+    /* ---------- Layout ---------- */
+    --sb-sidebar-w: 268px;
+    --sb-sidebar-collapsed: 78px;
+    --sb-topbar-h: 64px;
+    --sb-content-max: 1320px;
+
+    /* ---------- Layers ---------- */
+    --sb-z-nav: 60;
+    --sb-z-overlay: 70;
+    --sb-z-toast: 90;
+}
+
+/* =========================================================
+   Dark theme - the same roles, a midnight navy canvas.
+   ========================================================= */
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    --sb-bg: #0b1020;
+    --sb-bg-glow-1: rgba(101, 88, 245, 0.20);
+    --sb-bg-glow-2: rgba(34, 211, 238, 0.14);
+    --sb-surface: #121834;
+    --sb-surface-2: #171f40;
+    --sb-surface-3: #1e274c;
+    --sb-glass: rgba(18, 24, 52, 0.72);
+    --sb-line: #232c4e;
+    --sb-line-strong: #33406b;
+    --sb-text: #eef1ff;
+    --sb-text-soft: #c8cee8;
+    --sb-muted: #98a1c6;
+
+    --sb-accent: #8b5cf6;
+    --sb-accent-strong: #a78bfa;
+    --sb-accent-soft: rgba(139, 92, 246, 0.18);
+    --sb-accent-line: rgba(139, 92, 246, 0.42);
+    --sb-violet-ink: #c4b5fd;
+    --sb-cyan-ink: #67e8f9;
+
+    --sb-ok: #34d399;
+    --sb-ok-soft: rgba(52, 211, 153, 0.16);
+    --sb-warn: #fbbf24;
+    --sb-warn-soft: rgba(251, 191, 36, 0.16);
+    --sb-danger: #fb7185;
+    --sb-danger-soft: rgba(251, 113, 133, 0.16);
+    --sb-info: #22d3ee;
+    --sb-info-soft: rgba(34, 211, 238, 0.16);
+
+    --sb-grad-hero:
+        radial-gradient(720px 420px at 8% -20%, rgba(101, 88, 245, 0.34), transparent 66%),
+        radial-gradient(640px 400px at 94% 0%, rgba(34, 211, 238, 0.22), transparent 64%),
+        radial-gradient(560px 340px at 56% 120%, rgba(217, 70, 239, 0.20), transparent 68%);
+
+    --sb-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --sb-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.32);
+    --sb-shadow-md: 0 16px 34px -22px rgba(0, 0, 0, 0.65);
+    --sb-shadow-lg: 0 38px 72px -36px rgba(0, 0, 0, 0.75);
+    --sb-glow-accent: 0 20px 44px -22px rgba(139, 92, 246, 0.65);
+}
+
