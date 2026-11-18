@@ -1,0 +1,147 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Career Roadmap | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Your learning plan</p>
+    <h1>Career roadmap</h1>
+    <p>Follow the steps in order and mark each one complete when you can use it without help. Your progress is saved privately to your account.</p>
+</div>
+
+{% if view %}
+{% set circumference = 389.56 %}
+<section class="panel gap-hero">
+    <div class="gap-ring">
+        <svg viewBox="0 0 150 150" role="img" aria-label="{{ view.percentage }} percent of the {{ view.roadmap.title }} roadmap complete">
+            <circle class="gap-ring-track" cx="75" cy="75" r="62"></circle>
+            <circle class="gap-ring-fill" cx="75" cy="75" r="62"
+                    stroke-dasharray="{{ circumference }}"
+                    stroke-dashoffset="{{ circumference - (circumference * view.percentage / 100) }}"></circle>
+        </svg>
+        <div class="gap-ring-label">
+            <strong>{{ view.percentage }}%</strong>
+            <span>complete</span>
+        </div>
+    </div>
+    <div class="gap-hero-copy">
+        <h2>Your selected career</h2>
+        <p class="sb-soft">{{ view.roadmap.title }} · {{ view.total }} steps</p>
+        <p class="gap-counts">{{ view.completed }} of {{ view.total }} steps complete</p>
+        <p class="gap-note">{{ view.roadmap.description }}</p>
+        <div class="page-actions page-actions--tight">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('career.skill_gap') }}">View skill gap</a>
+        </div>
+    </div>
+</section>
+
+<div class="stat-grid">
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Steps complete</p>
+            <span class="stat-icon stat-icon--mint">{{ icon("check", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ view.completed }}</p>
+        <p class="stat-note">of {{ view.total }} steps</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Steps remaining</p>
+            <span class="stat-icon">{{ icon("route", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ view.remaining }}</p>
+        <p class="stat-note">Keep the order</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Next step</p>
+            <span class="stat-icon stat-icon--cyan">{{ icon("target", 18) }}</span>
+        </div>
+        <p class="stat-value">{% if view.next_step %}{{ view.next_step.step_number }}{% else %}Done{% endif %}</p>
+        <p class="stat-note">{% if view.next_step %}{{ view.next_step.title }}{% else %}Every step is complete{% endif %}</p>
+    </article>
+</div>
+
+<section class="panel module-panel">
+    <div class="panel-head">
+        <div>
+            <h2>Learning steps</h2>
+            <p>Only steps in this roadmap can be changed. Nothing is deleted when you switch roadmaps.</p>
+        </div>
+    </div>
+    <div class="roadmap-list">
+        {% for step in view.steps %}
+        <article class="roadmap-step {% if step.completed_at %}is-done{% endif %}">
+            <span class="roadmap-step-number">{% if step.completed_at %}{{ icon("check", 16) }}{% else %}{{ step.step_number }}{% endif %}</span>
+            <div class="roadmap-step-body">
+                <h3>{{ step.title }}</h3>
+                <p class="sb-soft">{{ step.description }}</p>
+                <div class="roadmap-step-meta">
+                    {% if step.completed_at %}
+                    <span class="status-pill is-acquired">Completed</span>
+                    <span class="gap-note">on {{ step.completed_at|date_label }}</span>
+                    {% else %}
+                    <span class="status-pill is-missing">Pending</span>
+                    {% endif %}
+                </div>
+            </div>
+            <form method="post" action="{{ url_for('roadmap.toggle_step', step_id=step.id) }}" class="roadmap-step-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if step.completed_at %}
+                <button class="btn btn-quiet btn-sm" type="submit">Mark not complete</button>
+                {% else %}
+                <button class="btn btn-outline btn-sm" type="submit">Mark complete</button>
+                {% endif %}
+            </form>
+        </article>
+        {% else %}
+        <div class="empty-state">
+            <span class="empty-icon">{{ icon("map", 22) }}</span>
+            <div>
+                <h3>This roadmap has no steps yet</h3>
+                <p>The steps for this career are being prepared.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="panel module-panel">
+    <div class="panel-head">
+        <div>
+            <h2>{% if view %}Switch roadmap{% else %}Choose a career path{% endif %}</h2>
+            <p>Each roadmap belongs to one career. Steps you completed are kept if you come back.</p>
+        </div>
+    </div>
+    {% if not view %}
+    <p class="gap-note">No career path chosen yet. Pick one below to start its roadmap.</p>
+    {% endif %}
+    <div class="card-grid">
+        {% for roadmap in roadmaps %}
+        <article class="panel module-card">
+            <div class="module-card-top">
+                <span class="badge badge-neutral">{{ roadmap.step_count }} steps</span>
+            </div>
+            <h2>{{ roadmap.title }}</h2>
+            <p class="sb-soft">{{ roadmap.description }}</p>
+            <form method="post" action="{{ url_for('roadmap.select_roadmap') }}" class="module-card-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="roadmap_id" value="{{ roadmap.id }}">
+                {% if view and view.roadmap.id == roadmap.id %}
+                <button class="btn btn-outline" type="submit">{{ icon("check", 16) }} Your current roadmap</button>
+                {% else %}
+                <button class="btn btn-primary" type="submit">Follow this roadmap</button>
+                {% endif %}
+            </form>
+        </article>
+        {% else %}
+        <p class="sb-muted">No roadmaps are available yet.</p>
+        {% endfor %}
+    </div>
+    <div class="page-actions page-actions--tight">
+        <a class="btn btn-outline" href="{{ url_for('career.choose_career') }}">Change career path</a>
+    </div>
+</section>
+{% endblock %}

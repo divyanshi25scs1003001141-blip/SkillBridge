@@ -1,0 +1,93 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Assessment History | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Your progress</p>
+    <h1>Assessment History</h1>
+    <p>Review your previous attempts and track how your knowledge develops.</p>
+</div>
+
+{% if results %}
+{% set best = results|map(attribute="percentage")|max %}
+{% set total_percentage = results|sum(attribute="percentage") %}
+{% set average = (total_percentage / results|length)|round|int %}
+<section class="stat-grid" aria-label="Your attempt totals">
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Attempts shown</p>
+            <span class="stat-icon">{{ icon("clipboard", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ results|length }}</p>
+        <p class="stat-note">Most recent attempts first</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Best score</p>
+            <span class="stat-icon stat-icon--mint">{{ icon("check", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ best|round|int }}%</p>
+        <p class="stat-note">Your highest percentage</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Average score</p>
+            <span class="stat-icon stat-icon--amber">{{ icon("chart", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ average }}%</p>
+        <p class="stat-note">Across these attempts</p>
+    </article>
+</section>
+{% endif %}
+
+<section class="panel history-panel" aria-labelledby="history-heading">
+    <div class="panel-head">
+        <div>
+            <h2 id="history-heading">Your attempts</h2>
+            <p>A saved record of every completed assessment.</p>
+        </div>
+        <a class="btn btn-outline btn-sm" href="{{ url_for('skills.assessment_list') }}">{{ icon("target", 16) }} Take an assessment</a>
+    </div>
+
+    {% if results %}
+    <ol class="attempt-list">
+        {% for result in results %}
+        <li class="attempt-row">
+            <div class="attempt-main">
+                <h3>{{ result.title }}</h3>
+                <p class="attempt-meta">
+                    <span>{{ result.taken_at|date_label }}</span>
+                    <span>{{ result.score }}/{{ result.total_questions }} correct</span>
+                </p>
+            </div>
+            <strong class="attempt-score">{{ result.percentage|round|int }}%</strong>
+            <div class="attempt-bar">
+                <div class="progress" role="img" aria-label="{{ result.percentage|round|int }} percent">
+                    <span class="progress-fill" style="--fill: {{ result.percentage|round|int }}%"></span>
+                </div>
+                {% if result.weak_topics %}
+                <p class="attempt-meta">
+                    <span>Revisit:</span>
+                    <span class="attempt-topics">
+                        {% for topic in result.weak_topics.split(', ') %}<span class="badge badge-danger">{{ topic }}</span>{% endfor %}
+                    </span>
+                </p>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ol>
+    {% else %}
+    <div class="empty-state">
+        <span class="empty-icon">{{ icon("chart", 20) }}</span>
+        <div>
+            <h3>No attempts yet</h3>
+            <p>Your completed assessments will appear here.</p>
+            <a class="btn btn-primary btn-sm" href="{{ url_for('skills.assessment_list') }}">Explore assessments</a>
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

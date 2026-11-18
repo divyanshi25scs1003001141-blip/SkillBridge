@@ -1,0 +1,165 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Projects | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Build to prove it</p>
+    <h1>Your projects</h1>
+    <p>Record what you build, link the repository and the live demo, and keep the status honest. These are private to your account.</p>
+</div>
+
+<section class="panel module-panel">
+    <div class="panel-head">
+        <div>
+            <h2>Add a project</h2>
+            <p>{{ counts["Planned"] }} planned · {{ counts["In Progress"] }} in progress · {{ counts["Completed"] }} completed</p>
+        </div>
+    </div>
+
+    <form method="post" action="{{ url_for('projects.create_project') }}" class="project-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-grid">
+            <div class="field-inline">
+                <label for="title">Title</label>
+                <input id="title" name="title" type="text" maxlength="120" required
+                       value="{{ form.title or '' }}" placeholder="Student Result Portal">
+            </div>
+            <div class="field-inline">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    {% for status in statuses %}
+                    <option value="{{ status }}" {% if (form.status or 'Planned') == status %}selected{% endif %}>{{ status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field-inline field-full">
+                <label for="description">What it does</label>
+                <textarea id="description" name="description" rows="2" maxlength="1000"
+                          placeholder="One or two sentences about the problem it solves.">{{ form.description or '' }}</textarea>
+            </div>
+            <div class="field-inline">
+                <label for="technologies">Technologies</label>
+                <input id="technologies" name="technologies" type="text" maxlength="300"
+                       value="{{ form.technologies or '' }}" placeholder="Python, Flask, SQLite">
+            </div>
+            <div class="field-inline">
+                <label for="github_url">GitHub link (optional)</label>
+                <input id="github_url" name="github_url" type="url" maxlength="300"
+                       value="{{ form.github_url or '' }}" placeholder="https://github.com/you/project">
+            </div>
+            <div class="field-inline">
+                <label for="live_url">Live link (optional)</label>
+                <input id="live_url" name="live_url" type="url" maxlength="300"
+                       value="{{ form.live_url or '' }}" placeholder="https://your-project.example.com">
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button class="btn btn-primary btn-sm" type="submit">Add project</button>
+        </div>
+    </form>
+</section>
+
+<section class="panel module-panel">
+    <div class="panel-head">
+        <div>
+            <h2>Project list</h2>
+            <p class="project-count">{{ projects|length }} project{{ '' if projects|length == 1 else 's' }} saved</p>
+        </div>
+    </div>
+
+    {% if projects %}
+        {% for status in statuses %}
+            {% if grouped[status] %}
+            <div class="project-group">
+                <h3 class="project-group-title">{{ status }} <span class="muted">({{ grouped[status]|length }})</span></h3>
+                <div class="card-grid">
+                    {% for project in grouped[status] %}
+                    <article class="panel module-card project-card">
+                        <div class="project-meta">
+                            <span class="badge">{{ project.status }}</span>
+                            <span class="project-date">Updated {{ project.updated_at[:10] }}</span>
+                        </div>
+                        <h2>{{ project.title }}</h2>
+                        {% if project.description %}<p class="sb-soft">{{ project.description }}</p>{% endif %}
+                        {% if project.tech %}
+                        <div class="tech-tags">
+                            {% for tech in project.tech %}<span class="tech-tag">{{ tech }}</span>{% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if project.github_url or project.live_url %}
+                        <div class="project-links">
+                            {% if project.github_url %}
+                            <a class="btn btn-outline btn-sm" href="{{ project.github_url }}" target="_blank" rel="noopener noreferrer">{{ icon("code", 16) }} GitHub</a>
+                            {% endif %}
+                            {% if project.live_url %}
+                            <a class="btn btn-outline btn-sm" href="{{ project.live_url }}" target="_blank" rel="noopener noreferrer">{{ icon("link", 16) }} Live demo</a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <details class="project-edit">
+                            <summary>Edit project</summary>
+                            <form method="post" action="{{ url_for('projects.edit_project', project_id=project.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="form-grid">
+                                    <div class="field-inline">
+                                        <label for="title-{{ project.id }}">Title</label>
+                                        <input id="title-{{ project.id }}" name="title" type="text" maxlength="120" required value="{{ project.title }}">
+                                    </div>
+                                    <div class="field-inline">
+                                        <label for="status-{{ project.id }}">Status</label>
+                                        <select id="status-{{ project.id }}" name="status">
+                                            {% for option in statuses %}
+                                            <option value="{{ option }}" {% if project.status == option %}selected{% endif %}>{{ option }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="field-inline field-full">
+                                        <label for="description-{{ project.id }}">What it does</label>
+                                        <textarea id="description-{{ project.id }}" name="description" rows="2" maxlength="1000">{{ project.description }}</textarea>
+                                    </div>
+                                    <div class="field-inline">
+                                        <label for="technologies-{{ project.id }}">Technologies</label>
+                                        <input id="technologies-{{ project.id }}" name="technologies" type="text" maxlength="300" value="{{ project.technologies }}">
+                                    </div>
+                                    <div class="field-inline">
+                                        <label for="github-{{ project.id }}">GitHub link</label>
+                                        <input id="github-{{ project.id }}" name="github_url" type="url" maxlength="300" value="{{ project.github_url }}">
+                                    </div>
+                                    <div class="field-inline">
+                                        <label for="live-{{ project.id }}">Live link</label>
+                                        <input id="live-{{ project.id }}" name="live_url" type="url" maxlength="300" value="{{ project.live_url }}">
+                                    </div>
+                                </div>
+                                <div class="filter-actions">
+                                    <button class="btn btn-primary btn-sm" type="submit">Save changes</button>
+                                </div>
+                            </form>
+                        </details>
+
+                        <form method="post" action="{{ url_for('projects.delete_project', project_id=project.id) }}"
+                              data-confirm="Delete this project? This cannot be undone.">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-quiet btn-sm" type="submit">Delete project</button>
+                        </form>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <span class="empty-icon">{{ icon("folder", 22) }}</span>
+        <div>
+            <h3>No projects yet</h3>
+            <p>Add your first project above — even one you have only planned is worth recording.</p>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<p class="gap-note">Projects are private to your account. The status is your own record of progress, not a score.</p>
+{% endblock %}

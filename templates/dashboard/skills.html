@@ -1,0 +1,117 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}My Skills | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Skill development</p>
+    <h1>Skill Management</h1>
+    <p>Build a clear picture of what you know and what you're learning next.</p>
+</div>
+
+<section class="stat-grid" aria-label="Your skill totals">
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Skills tracked</p>
+            <span class="stat-icon">{{ icon("clipboard", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ user_skills|length }}</p>
+        <p class="stat-note">In your personal skill list</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Acquired</p>
+            <span class="stat-icon stat-icon--mint">{{ icon("check", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ acquired }}</p>
+        <p class="stat-note">Marked as Acquired</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Currently learning</p>
+            <span class="stat-icon stat-icon--amber">{{ icon("book", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ user_skills|length - acquired }}</p>
+        <p class="stat-note">Still in progress</p>
+    </article>
+</section>
+
+<div class="skills-layout">
+    <section class="panel" aria-labelledby="your-skills-heading">
+        <div class="panel-head">
+            <div>
+                <h2 id="your-skills-heading">Your skills</h2>
+                <p>Update a skill's status as you make progress.</p>
+            </div>
+            <a class="btn btn-outline btn-sm" href="{{ url_for('skills.assessment_list') }}">{{ icon("target", 16) }} Take an assessment</a>
+        </div>
+
+        {% if user_skills %}
+        <ul class="skill-list">
+            {% for item in user_skills %}
+            <li class="skill-item">
+                <div class="skill-main">
+                    <h3>{{ item.name }}</h3>
+                    <span class="badge badge-neutral">{{ item.category }}</span>
+                </div>
+                <div class="skill-controls">
+                    <span class="badge {% if item.status == 'Acquired' %}badge-mint{% else %}badge-amber{% endif %}">{{ item.status }}</span>
+                    <form method="post" class="skill-actions">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="user_skill_id" value="{{ item.user_skill_id }}">
+                        <input type="hidden" name="action" value="update">
+                        <label class="sr-only" for="status-{{ item.user_skill_id }}">Status for {{ item.name }}</label>
+                        <select class="skill-select" id="status-{{ item.user_skill_id }}" name="status">
+                            <option value="Learning" {% if item.status == 'Learning' %}selected{% endif %}>Learning</option>
+                            <option value="Acquired" {% if item.status == 'Acquired' %}selected{% endif %}>Acquired</option>
+                        </select>
+                        <button class="btn btn-outline btn-sm" type="submit">Update</button>
+                    </form>
+                    <form method="post" data-confirm="Remove this skill from your list?">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="user_skill_id" value="{{ item.user_skill_id }}">
+                        <button class="btn btn-quiet btn-sm" type="submit">Remove</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty-state">
+            <span class="empty-icon">{{ icon("clipboard", 20) }}</span>
+            <div>
+                <h3>Your skill list is ready</h3>
+                <p>Add your first skill below to start tracking your development.</p>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+    <aside class="panel" aria-labelledby="add-skill-heading">
+        <div class="panel-head">
+            <div>
+                <h2 id="add-skill-heading">Add a skill</h2>
+                <p>Choose from the starter catalogue. You can add more skills in future updates.</p>
+            </div>
+        </div>
+        {% if available %}
+        <form method="post" class="add-skill-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="add">
+            <div class="field">
+                <label for="skill_id">Available skills</label>
+                <select class="input select" id="skill_id" name="skill_id" required>
+                    <option value="">Select a skill</option>
+                    {% for skill in available %}<option value="{{ skill.id }}">{{ skill.name }} — {{ skill.category }}</option>{% endfor %}
+                </select>
+            </div>
+            <button class="btn btn-primary" type="submit">Add skill</button>
+        </form>
+        {% else %}
+        <p class="sb-muted">You've added every skill in the current catalogue.</p>
+        {% endif %}
+    </aside>
+</div>
+{% endblock %}

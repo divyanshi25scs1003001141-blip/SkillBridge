@@ -1,0 +1,138 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Skill Gap | SkillBridge{% endblock %}
+
+{% block content %}
+{% set circumference = 389.56 %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Skill gap analysis</p>
+    <h1>Your skill gap</h1>
+    <p>Your selected career: <strong>{{ gap.career.title }}</strong>. A skill marked Acquired counts fully, one you are Learning counts half, and a missing skill counts zero. Core skills count twice.</p>
+</div>
+
+<div class="stat-grid">
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Required skills</p>
+            <span class="stat-icon">{{ icon("clipboard", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ gap.required_count }}</p>
+        <p class="stat-note">Every skill this career asks for</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Core skills</p>
+            <span class="stat-icon stat-icon--cyan">{{ icon("target", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ gap.core_count }}</p>
+        <p class="stat-note">Counted twice in the score</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Still to build</p>
+            <span class="stat-icon stat-icon--amber">{{ icon("flag", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ gap.counts["Missing"] }}</p>
+        <p class="stat-note">Not started yet</p>
+    </article>
+</div>
+
+<section class="panel gap-hero">
+    <div class="gap-ring">
+        <svg viewBox="0 0 150 150" role="img" aria-label="{{ gap.percentage }} percent of {{ gap.career.title }} skills covered">
+            <circle class="gap-ring-track" cx="75" cy="75" r="62"></circle>
+            <circle class="gap-ring-fill" cx="75" cy="75" r="62"
+                    stroke-dasharray="{{ circumference }}"
+                    stroke-dashoffset="{{ circumference - (circumference * gap.percentage / 100) }}"></circle>
+        </svg>
+        <div class="gap-ring-label">
+            <strong>{{ gap.percentage }}%</strong>
+            <span>covered</span>
+        </div>
+    </div>
+    <div class="gap-hero-copy">
+        <h2>{{ gap.percentage }}% of {{ gap.career.title }} skills covered</h2>
+        <p class="sb-soft">{{ gap.career.description }}</p>
+        <p class="gap-counts">{{ gap.counts["Acquired"] }} acquired · {{ gap.counts["Learning"] }} learning · {{ gap.counts["Missing"] }} not started</p>
+        <div class="gap-legend">
+            <span class="gap-legend-item"><i class="status-dot status-dot--ok" aria-hidden="true"></i>Acquired {{ gap.counts["Acquired"] }}</span>
+            <span class="gap-legend-item"><i class="status-dot status-dot--warn" aria-hidden="true"></i>Learning {{ gap.counts["Learning"] }}</span>
+            <span class="gap-legend-item"><i class="status-dot" aria-hidden="true"></i>Not started {{ gap.counts["Missing"] }}</span>
+        </div>
+    </div>
+</section>
+
+<section class="panel module-panel">
+    <div class="panel-head">
+        <div>
+            <h2>Required skills</h2>
+            <p>Mark a skill Acquired only when you can use it without help.</p>
+        </div>
+        <a class="btn btn-outline btn-sm" href="{{ url_for('skills.manage_skills') }}">Update my skills</a>
+    </div>
+
+    {% if gap.skills %}
+    <div class="gap-skill-list">
+        {% for item in gap.skills %}
+        <article class="gap-skill-row">
+            <div class="gap-skill-main">
+                <p class="gap-skill-category">{{ item.category }}{% if item.is_core %} · core skill{% endif %}</p>
+                <h3>{{ item.name }}</h3>
+                {% if item.assessment_percentage is not none %}
+                <p class="gap-note">
+                    Latest {{ item.name }} assessment: {{ item.assessment_percentage }}%
+                    {% if item.weak_topics %}· revisit {{ item.weak_topics }}{% endif %}
+                </p>
+                {% endif %}
+            </div>
+            <div class="gap-skill-meter">
+                <div class="progress {% if item.status == 'Acquired' %}progress--mint{% elif item.status == 'Missing' %}progress--warm{% endif %}"
+                     role="img" aria-label="{{ item.name }}: {{ item.status }}">
+                    <span class="progress-fill" style="--fill: {% if item.status == 'Acquired' %}100{% elif item.status == 'Learning' %}50{% else %}0{% endif %}%"></span>
+                </div>
+                <span class="gap-weight">weight {{ item.weight }}×</span>
+            </div>
+            <div class="gap-skill-status">
+                {% if item.status == "Acquired" %}
+                <span class="status-pill is-acquired">Acquired</span>
+                {% elif item.status == "Learning" %}
+                <span class="status-pill is-learning">Learning</span>
+                {% else %}
+                <span class="status-pill is-missing">Not started</span>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <span class="empty-icon">{{ icon("folder", 22) }}</span>
+        <div>
+            <h3>This career has no required skills yet</h3>
+            <p>Add the skills for this career in the career catalogue first.</p>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<section class="panel module-panel">
+    <div class="panel-head">
+        <div>
+            <h2>Suggested next steps</h2>
+            <p>Worked out from your own skill list and your career choice.</p>
+        </div>
+    </div>
+    <ul class="gap-recommendations">
+        {% for tip in gap.recommendations %}
+        <li>{{ tip }}</li>
+        {% endfor %}
+    </ul>
+    <p class="gap-note">Assessment scores are extra insight only. They never change a skill's status by themselves — you decide when a skill is Acquired.</p>
+</section>
+
+<div class="page-actions">
+    <a class="btn btn-outline" href="{{ url_for('career.choose_career') }}">Change career path</a>
+    <a class="btn btn-primary" href="{{ url_for('skills.assessment_list') }}">Take an assessment {{ icon("arrow-right", 16) }}</a>
+</div>
+{% endblock %}

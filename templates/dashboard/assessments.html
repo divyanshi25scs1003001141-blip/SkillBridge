@@ -1,0 +1,89 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Skill Assessments | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Know your level</p>
+    <h1>Skill Assessments</h1>
+    <p>Take a short quiz to check your current understanding. Your results are saved privately to your account.</p>
+</div>
+
+{% set scored = assessments|selectattr("latest_score")|list %}
+{% set attempts_total = assessments|sum(attribute="attempts") %}
+
+<section class="stat-grid" aria-label="Your assessment activity">
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Assessments available</p>
+            <span class="stat-icon">{{ icon("clipboard", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ assessments|length }}</p>
+        <p class="stat-note">Across your skill areas</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Attempts taken</p>
+            <span class="stat-icon stat-icon--cyan">{{ icon("target", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ attempts_total }}</p>
+        <p class="stat-note">Every attempt is saved</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Best latest score</p>
+            <span class="stat-icon stat-icon--mint">{{ icon("check", 18) }}</span>
+        </div>
+        <p class="stat-value">{% if scored %}{{ (scored|map(attribute="latest_score")|max|round|int) }}%{% else %}—{% endif %}</p>
+        <p class="stat-note">Your strongest result so far</p>
+    </article>
+</section>
+
+<div class="assess-grid">
+    {% for assessment in assessments %}
+    <article class="panel assessment-tile">
+        <div class="assessment-tile-top">
+            <span class="badge badge-neutral">{{ assessment.question_count }} questions</span>
+            {% if assessment.attempts %}
+            <span class="badge badge-mint">{{ assessment.latest_score|round|int }}%</span>
+            {% else %}
+            <span class="badge">Not started</span>
+            {% endif %}
+        </div>
+
+        <h2>{{ assessment.title }}</h2>
+        <p class="assessment-desc sb-muted">{{ assessment.description }}</p>
+
+        {% if assessment.attempts %}
+        <div class="assessment-meter">
+            <div class="progress" role="img" aria-label="Latest score {{ assessment.latest_score|round|int }} percent">
+                <span class="progress-fill" style="--fill: {{ assessment.latest_score|round|int }}%"></span>
+            </div>
+            <p class="assessment-scoreline">
+                <span>Latest score: <strong>{{ assessment.latest_score|round|int }}%</strong></span>
+                <span>{{ assessment.attempts }} attempt(s)</span>
+            </p>
+        </div>
+        {% else %}
+        <p class="assessment-scoreline assessment-scoreline--empty">Not attempted yet</p>
+        {% endif %}
+
+        <a class="btn {% if assessment.attempts %}btn-outline{% else %}btn-primary{% endif %}" href="{{ url_for('skills.take_assessment', assessment_id=assessment.id) }}">
+            {% if assessment.attempts %}Retake assessment{% else %}Start assessment{% endif %}
+            {{ icon("arrow-right", 16) }}
+        </a>
+    </article>
+    {% else %}
+    <div class="empty-state">
+        <span class="empty-icon">{{ icon("clipboard", 20) }}</span>
+        <div>
+            <h3>No assessments are available yet</h3>
+            <p>New knowledge checks will appear here once they are ready.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<p class="assessment-footnote sb-muted">{{ icon("shield", 16) }} Assessments are learning checks, not hiring predictions. Only you can see your results.</p>
+{% endblock %}

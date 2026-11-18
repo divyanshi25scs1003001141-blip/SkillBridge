@@ -1,0 +1,150 @@
+{#
+  dashboard/layout.html - the shell shared by every private page:
+  a grouped sidebar on the left (a slide-in menu on phones) and the page on the right.
+
+  A page uses it like this:
+      {% extends "dashboard/layout.html" %}
+      {% block title %}My Page | SkillBridge{% endblock %}
+      {% block content %} ... {% endblock %}
+
+  To add a new page to the sidebar in a later phase, copy one of the links
+  inside the group it belongs to. The collapse button (desktop) and the
+  slide-in menu (phones) are wired up in static/js/dashboard.js.
+#}
+{% extends "base.html" %}
+{% from "_icons.html" import icon, logo_mark %}
+
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block body %}
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar" aria-label="Dashboard">
+        <div class="sidebar-head">
+            <a class="brand" href="{{ url_for('dashboard.home') }}" aria-label="SkillBridge dashboard">
+                <span class="brand-mark">{{ logo_mark(20) }}</span>
+                <span class="brand-name">SkillBridge</span>
+            </a>
+            <div class="sidebar-head-actions">
+                <button type="button" class="icon-button sidebar-collapse" data-sidebar-collapse
+                        aria-controls="sidebar" aria-expanded="true"
+                        aria-label="Collapse menu" title="Collapse menu">
+                    {{ icon("chevrons-left", 18) }}
+                </button>
+                <button type="button" class="icon-button sidebar-close" data-sidebar-close aria-label="Close menu">
+                    {{ icon("x", 20) }}
+                </button>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Private pages">
+            <div class="nav-group">
+                <p class="nav-group-label">Overview</p>
+                <a href="{{ url_for('dashboard.home') }}" title="Dashboard" {% if request.endpoint == 'dashboard.home' %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("dashboard", 20) }}<span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('profile.my_profile') }}" title="My Profile" {% if request.endpoint == 'profile.my_profile' %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("user", 20) }}<span>My Profile</span>
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <p class="nav-group-label">Skill development</p>
+                <a href="{{ url_for('skills.manage_skills') }}" title="My Skills" {% if request.endpoint == 'skills.manage_skills' %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("clipboard", 20) }}<span>My Skills</span>
+                </a>
+                <a href="{{ url_for('skills.assessment_list') }}" title="Skill Assessment" {% if request.endpoint in ['skills.assessment_list', 'skills.take_assessment', 'skills.submit_assessment'] %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("target", 20) }}<span>Skill Assessment</span>
+                </a>
+                <a href="{{ url_for('skills.assessment_history') }}" title="Assessment History" {% if request.endpoint == 'skills.assessment_history' %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("file", 20) }}<span>Assessment History</span>
+                </a>
+                <a href="{{ url_for('resources.list_resources') }}" title="Learning Resources" {% if request.endpoint in ['resources.list_resources', 'resources.toggle_favourite', 'resources.save_note'] %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("book", 20) }}<span>Learning Resources</span>
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <p class="nav-group-label">Career management</p>
+                <a href="{{ url_for('career.choose_career') }}" title="Career Goal" {% if request.endpoint == 'career.choose_career' %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("route", 20) }}<span>Career Goal</span>
+                </a>
+                <a href="{{ url_for('career.skill_gap') }}" title="Skill Gap" {% if request.endpoint == 'career.skill_gap' %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("chart", 20) }}<span>Skill Gap</span>
+                </a>
+                <a href="{{ url_for('roadmap.view_roadmap') }}" title="Career Roadmap" {% if request.endpoint in ['roadmap.view_roadmap', 'roadmap.select_roadmap', 'roadmap.toggle_step'] %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("map", 20) }}<span>Career Roadmap</span>
+                </a>
+                <a href="{{ url_for('projects.list_projects') }}" title="Projects" {% if request.endpoint in ['projects.list_projects', 'projects.create_project', 'projects.edit_project', 'projects.delete_project'] %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("folder", 20) }}<span>Projects</span>
+                </a>
+                <a href="{{ url_for('goals.list_goals') }}" title="Learning Goals" {% if request.endpoint in ['goals.list_goals', 'goals.create_goal', 'goals.complete_goal', 'goals.reopen_goal', 'goals.delete_goal'] %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("flag", 20) }}<span>Learning Goals</span>
+                </a>
+                <a href="{{ url_for('readiness.report') }}" title="Readiness Report" {% if request.endpoint == 'readiness.report' %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("shield", 20) }}<span>Readiness Report</span>
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <p class="nav-group-label">Career studio</p>
+                <a href="{{ url_for('resumes.list_resumes') }}" title="Resume Builder" {% if request.endpoint and request.endpoint.startswith('resumes.') %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("file", 20) }}<span>Resume Builder</span>
+                </a>
+                <a href="{{ url_for('certificates.vault') }}" title="Certificate Vault" {% if request.endpoint and request.endpoint.startswith('certificates.') %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("shield", 20) }}<span>Certificate Vault</span>
+                </a>
+                <a href="{{ url_for('analyzer.analyzer_home') }}" title="Resume Analyzer" {% if request.endpoint and request.endpoint.startswith('analyzer.') %}class="active" aria-current="page"{% endif %}>
+                    {{ icon("target", 20) }}<span>Resume Analyzer</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-foot">
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme">
+                <span class="icon-moon">{{ icon("moon", 16) }}</span>
+                <span class="icon-sun">{{ icon("sun", 16) }}</span>
+                <span data-theme-label>Dark</span>
+            </button>
+            <div class="user-chip">
+                <span class="avatar" aria-hidden="true">{{ current_user.name[0]|upper }}</span>
+                <div class="user-chip-text">
+                    <p class="user-chip-name">{{ current_user.name }}</p>
+                    <p class="user-chip-email">{{ current_user.email }}</p>
+                </div>
+            </div>
+            <form method="post" action="{{ url_for('auth.logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="sidebar-logout">{{ icon("logout", 20) }}<span>Log out</span></button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="app-main">
+        <header class="app-topbar">
+            <button type="button" class="icon-button" data-sidebar-toggle aria-controls="sidebar" aria-expanded="false" aria-label="Open menu">
+                {{ icon("menu", 22) }}
+            </button>
+            <a class="brand" href="{{ url_for('dashboard.home') }}" aria-label="SkillBridge dashboard">
+                <span class="brand-mark">{{ logo_mark(20) }}</span>
+                <span class="brand-name">SkillBridge</span>
+            </a>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme">
+                <span class="icon-moon">{{ icon("moon", 16) }}</span>
+                <span class="icon-sun">{{ icon("sun", 16) }}</span>
+            </button>
+        </header>
+
+        <main id="main-content" class="app-content">
+            {% include "_flash.html" %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>{% endblock %}

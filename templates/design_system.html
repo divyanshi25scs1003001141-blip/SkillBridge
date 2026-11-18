@@ -1,0 +1,582 @@
+{% from "_icons.html" import icon, logo_mark %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SkillBridge Design System | Phase 2 review</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}">
+    {% include "_theme_init.html" %}
+    <link rel="preload" href="{{ url_for('static', filename='fonts/bricolage-grotesque-latin-700-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <style>
+        /* Page-local layout only; every visual decision comes from tokens/app. */
+        .ds-header {
+            position: sticky; top: 0; z-index: 40;
+            background: var(--sb-glass);
+            -webkit-backdrop-filter: blur(16px) saturate(160%);
+            backdrop-filter: blur(16px) saturate(160%);
+            border-bottom: 1px solid var(--sb-line);
+        }
+        .ds-header-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--sb-space-4); height: 64px; }
+        .ds-nav { display: flex; gap: 0.2rem; overflow-x: auto; scrollbar-width: none; }
+        .ds-nav a { padding: 0.35rem 0.6rem; border-radius: var(--sb-r-xs); color: var(--sb-muted); font-size: var(--sb-text-sm); text-decoration: none; white-space: nowrap; }
+        .ds-nav a:hover { background: var(--sb-surface-2); color: var(--sb-text); }
+        .ds-main { padding-block: var(--sb-space-6) var(--sb-space-7); display: grid; gap: var(--sb-space-7); }
+        .ds-section { display: grid; gap: var(--sb-space-4); scroll-margin-top: 84px; }
+        .ds-section > .sb-page-head { margin-bottom: 0; }
+        .ds-swatch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--sb-space-3); }
+        .ds-swatch { border: 1px solid var(--sb-line); border-radius: var(--sb-r); overflow: hidden; background: var(--sb-surface); }
+        .ds-swatch-colour { height: 68px; }
+        .ds-swatch-meta { padding: 0.5rem 0.65rem; display: grid; gap: 0.1rem; }
+        .ds-swatch-meta strong { font-size: var(--sb-text-sm); }
+        .ds-swatch-meta code { font-size: 0.72rem; color: var(--sb-muted); }
+        .ds-type-row { display: grid; gap: var(--sb-space-2); padding: var(--sb-space-3) 0; border-bottom: 1px solid var(--sb-line); }
+        .ds-type-row:last-child { border-bottom: 0; }
+        .ds-type-meta { font-size: var(--sb-text-xs); color: var(--sb-muted); letter-spacing: 0.04em; text-transform: uppercase; }
+        .ds-theme-panes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--sb-space-4); }
+        .theme-pane { border: 1px solid var(--sb-line); border-radius: var(--sb-r-lg); padding: var(--sb-space-4); background: var(--sb-bg); color: var(--sb-text); }
+        .theme-pane h3 { margin-bottom: 0.3rem; }
+        .ds-demo-sidebar { display: grid; grid-template-columns: var(--sb-sidebar-w) minmax(0, 1fr); gap: var(--sb-space-4); border: 1px solid var(--sb-line); border-radius: var(--sb-r-lg); overflow: hidden; background: var(--sb-bg); }
+        .ds-demo-sidebar .sidebar { position: relative; height: auto; max-height: 560px; }
+        .ds-demo-main { padding: var(--sb-space-4); display: grid; gap: var(--sb-space-3); align-content: start; }
+        .ds-demo-main h3 { font-size: 1rem; }
+        .ds-rows { display: grid; gap: var(--sb-space-3); }
+        .ds-note { padding: 0.7rem 0.9rem; border-radius: var(--sb-r-sm); background: var(--sb-info-soft); color: var(--sb-info); font-size: var(--sb-text-sm); border: 1px solid color-mix(in srgb, var(--sb-info) 22%, transparent); }
+        @media (max-width: 760px) {
+            .ds-nav { display: none; }
+            .ds-demo-sidebar { grid-template-columns: minmax(0, 1fr); }
+            .ds-demo-sidebar .sidebar { display: none; }
+        }
+    </style>
+</head>
+<body>
+<header class="ds-header">
+    <div class="sb-container ds-header-inner">
+        <a class="sidebar-brand" href="{{ url_for('main.index') }}" style="padding:0">
+            <span class="brand-mark">{{ logo_mark(18) }}</span>
+            <span class="brand-name">SkillBridge <span class="sb-muted" style="font-size:.72rem;font-weight:500">Design System</span></span>
+        </a>
+        <nav class="ds-nav" aria-label="Design system sections">
+            <a href="#tokens">Tokens</a>
+            <a href="#type">Type</a>
+            <a href="#buttons">Buttons</a>
+            <a href="#cards">Cards</a>
+            <a href="#charts">Charts</a>
+            <a href="#forms">Forms</a>
+            <a href="#feedback">Feedback</a>
+            <a href="#shell">Shell</a>
+        </nav>
+        <button class="theme-toggle" type="button" data-theme-toggle>
+            <span class="icon-moon">{{ icon("moon", 15) }}</span>
+            <span class="icon-sun">{{ icon("sun", 15) }}</span>
+            <span data-theme-label>Dark</span>
+        </button>
+    </div>
+</header>
+
+<main class="sb-container ds-main" id="main-content">
+
+    <section class="sb-hero">
+        <p class="sb-eyebrow">Phase 2 · design direction</p>
+        <h1 class="sb-gradient-text" style="margin:0.4rem 0 0.6rem">SkillBridge design system</h1>
+        <p style="max-width:64ch;margin:0">
+            One token layer, one component library, two themes. Everything below is the real
+            CSS that the redesigned dashboard and modules will use — reviewed here before any
+            page is touched. Data shown on this page is example content, clearly not from your database.
+        </p>
+        <div class="sb-cluster" style="margin-top:1.1rem">
+            <span class="badge">Light default</span>
+            <span class="badge badge-cyan">Working dark toggle</span>
+            <span class="badge badge-mint">No new dependencies</span>
+            <a class="btn btn-secondary btn-sm" href="{{ url_for('dashboard.home') }}">Back to the app</a>
+        </div>
+    </section>
+
+    <!-- ---------------------------------------------------------- tokens -->
+    <section class="ds-section" id="tokens">
+        <div class="sb-page-head">
+            <p class="sb-eyebrow">01 · Colour</p>
+            <h2>Palette and semantic roles</h2>
+            <p>Brand colours stay fixed; every surface, border and text colour is a role that changes with the theme.</p>
+        </div>
+
+        <div class="ds-swatch-grid">
+            {% for name, hex in [
+                ("Midnight", "#101426"), ("Indigo", "#6558F5"), ("Electric violet", "#8B5CF6"),
+                ("Cyan", "#22D3EE"), ("Mint", "#34D399"), ("Coral", "#FB7185"),
+                ("Amber", "#FBBF24"), ("Lavender", "#C4B5FD")
+            ] %}
+            <div class="ds-swatch">
+                <div class="ds-swatch-colour" style="background: {{ hex }}"></div>
+                <div class="ds-swatch-meta"><strong>{{ name }}</strong><code>{{ hex }}</code></div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="ds-theme-panes">
+            <div class="theme-pane" data-theme="light">
+                <h3>Light canvas</h3>
+                <p class="sb-muted" style="font-size:.85rem">Default. #F7F8FC with white surfaces.</p>
+                <div class="panel" style="margin-top:.6rem">
+                    <div class="sb-split"><strong>Surface / role sample</strong><span class="badge badge-mint">Acquired</span></div>
+                    <p class="sb-muted" style="margin:.4rem 0 0;font-size:.85rem">Body text uses <code>--sb-text</code>; secondary copy uses <code>--sb-muted</code>.</p>
+                    <div class="progress" style="margin-top:.7rem"><span class="progress-fill" style="--fill:68%"></span></div>
+                </div>
+                <ul class="sb-cluster" style="margin-top:.8rem;list-style:none;padding:0">
+                    <li class="badge badge-neutral">--sb-bg</li>
+                    <li class="badge badge-neutral">--sb-surface</li>
+                    <li class="badge badge-neutral">--sb-line</li>
+                    <li class="badge badge-neutral">--sb-text</li>
+                </ul>
+            </div>
+            <div class="theme-pane" data-theme="dark">
+                <h3>Dark canvas</h3>
+                <p class="sb-muted" style="font-size:.85rem">Toggle in the header. #0B1020 with navy surfaces.</p>
+                <div class="panel" style="margin-top:.6rem">
+                    <div class="sb-split"><strong>Surface / role sample</strong><span class="badge badge-mint">Acquired</span></div>
+                    <p class="sb-muted" style="margin:.4rem 0 0;font-size:.85rem">Same components, same markup — only the role values changed.</p>
+                    <div class="progress" style="margin-top:.7rem"><span class="progress-fill" style="--fill:68%"></span></div>
+                </div>
+                <ul class="sb-cluster" style="margin-top:.8rem;list-style:none;padding:0">
+                    <li class="badge badge-neutral">--sb-bg</li>
+                    <li class="badge badge-neutral">--sb-surface</li>
+                    <li class="badge badge-neutral">--sb-line</li>
+                    <li class="badge badge-neutral">--sb-text</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ------------------------------------------------------------ type -->
+    <section class="ds-section" id="type">
+        <div class="sb-page-head">
+            <p class="sb-eyebrow">02 · Typography</p>
+            <h2>Bricolage Grotesque + Instrument Sans</h2>
+            <p>Both fonts are already bundled locally, so the platform keeps working offline and stays fast.</p>
+        </div>
+        <div class="panel">
+            <div class="ds-type-row">
+                <span class="ds-type-meta">Display · Bricolage 700 · clamp(1.9–2.7rem)</span>
+                <h1 style="margin:0">Build skills. Prove them. Get hired.</h1>
+            </div>
+            <div class="ds-type-row">
+                <span class="ds-type-meta">Section · 1.55rem</span>
+                <h2 style="margin:0">Where your preparation stands</h2>
+            </div>
+            <div class="ds-type-row">
+                <span class="ds-type-meta">Card title · 1.06rem</span>
+                <h3 style="margin:0">Career roadmap · Python Developer</h3>
+            </div>
+            <div class="ds-type-row">
+                <span class="ds-type-meta">Body · Instrument Sans 400 · 1rem / 1.6</span>
+                <p style="margin:0;max-width:70ch">SkillBridge combines your skills, assessments, roadmap progress, projects and goals into one honest picture of career readiness. Every number links back to the record it came from.</p>
+            </div>
+            <div class="ds-type-row">
+                <span class="ds-type-meta">Meta · 0.76rem uppercase · 0.14em tracking</span>
+                <p class="sb-eyebrow" style="margin:0">Career Studio · Resume Analyzer</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- --------------------------------------------------------- buttons -->
+    <section class="ds-section" id="buttons">
+        <div class="sb-page-head">
+            <p class="sb-eyebrow">03 · Controls</p>
+            <h2>Buttons, badges and filters</h2>
+            <p>One gradient action per view. Everything else is a surface or ghost button, so colour always means “this is the next step”.</p>
+        </div>
+        <div class="panel">
+            <div class="sb-cluster">
+                <button class="btn btn-primary" type="button">Primary action</button>
+                <button class="btn btn-secondary" type="button">Secondary</button>
+                <button class="btn btn-ghost" type="button">Ghost</button>
+                <button class="btn btn-danger" type="button">Delete</button>
+                <button class="btn btn-primary btn-sm" type="button">Small</button>
+                <button class="btn btn-primary btn-lg" type="button">Large</button>
+                <button class="btn btn-secondary btn-icon" type="button" aria-label="Search">{{ icon("search", 16) }}</button>
+                <button class="btn btn-secondary" type="button" disabled>Disabled</button>
+            </div>
+            <hr>
+            <div class="sb-cluster">
+                <span class="badge">Learning</span>
+                <span class="badge badge-mint">Acquired</span>
+                <span class="badge badge-amber">Due soon</span>
+                <span class="badge badge-danger">Overdue</span>
+                <span class="badge badge-cyan">In progress</span>
+                <span class="badge badge-neutral">Planned</span>
+                <span class="sb-cluster" style="gap:.35rem"><span class="status-dot status-dot--ok"></span><span class="sb-small">Completed</span></span>
+                <span class="sb-cluster" style="gap:.35rem"><span class="status-dot status-dot--warn"></span><span class="sb-small">In progress</span></span>
+                <span class="sb-cluster" style="gap:.35rem"><span class="status-dot status-dot--danger"></span><span class="sb-small">Overdue</span></span>
+            </div>
+            <hr>
+            <div class="sb-cluster">
+                <div class="segmented" role="tablist" aria-label="Example filter">
+                    <button type="button" class="is-active" role="tab" aria-selected="true">All</button>
+                    <button type="button" role="tab" aria-selected="false">Learning</button>
+                    <button type="button" role="tab" aria-selected="false">Acquired</button>
+                </div>
+                <ul class="chips">
+                    <li>Python</li><li>Flask</li><li>SQL</li><li>Docker</li><li>Git</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ----------------------------------------------------------- cards -->
+    <section class="ds-section" id="cards">
+        <div class="sb-page-head">
+            <p class="sb-eyebrow">04 · Surfaces</p>
+            <h2>Stat cards, panels and progress</h2>
+            <p>Stats carry a coloured icon and one honest sublabel. Panels hold one idea each.</p>
+        </div>
+
+        <div class="stat-grid">
+            <article class="stat-card">
+                <div class="stat-card-top"><p class="stat-label">Skills tracked</p><span class="stat-icon">{{ icon("clipboard", 17) }}</span></div>
+                <p class="stat-value">12</p>
+                <p class="stat-note">8 acquired · 4 learning</p>
+            </article>
+            <article class="stat-card">
+                <div class="stat-card-top"><p class="stat-label">Average score</p><span class="stat-icon stat-icon--mint">{{ icon("chart", 17) }}</span></div>
+                <p class="stat-value">76%</p>
+                <p class="stat-note">Across 4 assessments</p>
+            </article>
+            <article class="stat-card">
+                <div class="stat-card-top"><p class="stat-label">Active projects</p><span class="stat-icon stat-icon--cyan">{{ icon("folder", 17) }}</span></div>
+                <p class="stat-value">3</p>
+                <p class="stat-note">2 in progress · 1 planned</p>
+            </article>
+            <article class="stat-card">
+                <div class="stat-card-top"><p class="stat-label">Goals open</p><span class="stat-icon stat-icon--amber">{{ icon("flag", 17) }}</span></div>
+                <p class="stat-value">4</p>
+                <p class="stat-note">1 due this week</p>
+            </article>
+        </div>
+
+        <div class="sb-grid sb-grid-2">
+            <section class="panel">
+                <div class="panel-head">
+                    <div><h2>Panel with a task</h2><p>Next step surfaces one action, not five.</p></div>
+                    <span class="badge badge-amber">Due soon</span>
+                </div>
+                <div class="panel-body">
+                    <p style="margin:0">Finish the SQL assessment and review the two missing skills for the Data Analyst path.</p>
+                    <div>
+                        <div class="progress-meta"><span class="sb-small">Roadmap progress</span><span class="sb-small sb-muted numeric">6 of 8 steps</span></div>
+                        <div class="progress"><span class="progress-fill" style="--fill:75%"></span></div>
+                    </div>
+                    <div class="sb-cluster"><button class="btn btn-primary btn-sm" type="button">Continue</button><button class="btn btn-ghost btn-sm" type="button">View roadmap</button></div>
+                </div>
+            </section>
+
+            <section class="panel panel--gradient">
+                <div class="panel-head"><div><h2>Hero panel</h2><p>Reserved for the dashboard welcome block and the readiness score.</p></div></div>
+                <div class="sb-cluster" style="justify-content:space-between">
+                    <div>
+                        <p class="sb-muted sb-small" style="margin:0">Career readiness</p>
+                        <p class="sb-numeric" style="margin:.1rem 0 0;font-family:var(--sb-font-heading);font-size:2.2rem;font-weight:700;letter-spacing:-.03em">72<span class="sb-muted" style="font-size:1rem">/100</span></p>
+                    </div>
+                    <div class="ring" data-chart="ring" data-percent="72" data-size="104" data-stroke="9" data-label="72%" data-caption="Ready"></div>
+                </div>
+            </section>
+        </div>
+    </section>
+
+    <!-- ---------------------------------------------------------- charts -->
+    <section class="ds-section" id="charts">
+        <div class="sb-page-head">
+            <p class="sb-eyebrow">05 · Data visualisation</p>
+            <h2>Charts without a dependency</h2>
+            <p>Inline SVG built from the theme's own colours. Figures below are illustrative; in the app each chart is fed by real database values.</p>
+        </div>
+
+        <div class="sb-grid sb-grid-2">
+            <section class="panel">
+                <div class="panel-head"><div><h2>Skill status</h2><p>Donut with legend</p></div></div>
+                <div data-chart="donut"
+                     data-values='[{"label":"Acquired","value":8,"tone":"mint"},{"label":"Learning","value":4,"tone":"amber"},{"label":"Not started","value":3,"tone":"muted"}]'
+                     data-center="15" data-caption="skills"></div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head"><div><h2>Latest assessment scores</h2><p>Vertical bars, percentage scale</p></div></div>
+                <div data-chart="bars" data-max="100"
+                     data-values='[{"label":"Python","value":80,"display":"80%"},{"label":"SQL","value":70,"display":"70%"},{"label":"HTML/CSS","value":90,"display":"90%"},{"label":"JavaScript","value":60,"display":"60%"},{"label":"Java","value":75,"display":"75%"}]'></div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head"><div><h2>Activity, last 7 days</h2><p>Line chart with area fill</p></div></div>
+                <div data-chart="line"
+                     data-labels='["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]'
+                     data-values="[2,5,3,7,4,6,3]"></div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head"><div><h2>Progress rings</h2><p>Goals, roadmap and readiness</p></div></div>
+                <div class="sb-cluster" style="justify-content:space-around;gap:1rem">
+                    <div data-chart="ring" data-percent="62" data-label="62%" data-caption="Goals" data-size="108" data-stroke="9"></div>
+                    <div data-chart="ring" data-percent="75" data-label="6/8" data-caption="Roadmap" data-size="108" data-stroke="9" data-tone="mint"></div>
+                    <div data-chart="ring" data-percent="40" data-label="40%" data-caption="Projects" data-size="108" data-stroke="9" data-tone="coral"></div>
+                </div>
+            </section>
+        </div>
+
+        <section class="panel">
+            <div class="panel-head"><div><h2>Sparkline</h2><p>For compact rows and the sidebar-free topbar</p></div></div>
+            <div class="sb-split">
+                <div style="flex:1 1 220px"><div data-chart="spark" data-values="[1,3,2,5,3,6,4,7]"></div></div>
+                <div class="sb-cluster"><strong class="sb-numeric">+18%</strong><span class="badge badge-mint">this week</span></div>
+            </div>
+        </section>
+    </section>
+
+    <!-- ----------------------------------------------------------- forms -->
+    <section class="ds-section" id="forms">
+        <div class="sb-page-head">
+            <p class="sb-eyebrow">06 · Forms</p>
+            <h2>Fields, search and switches</h2>
+            <p>Validation is shown inline, in the field, with a clear message — never only as a red outline.</p>
+        </div>
+        <div class="sb-grid sb-grid-2">
+            <form class="panel sb-stack" onsubmit="return false">
+                <h2 style="margin:0">Example form</h2>
+                <div class="field">
+                    <label for="ds-title">Goal title</label>
+                    <input class="input" id="ds-title" type="text" value="Complete the SQL assessment" placeholder="What do you want to finish?">
+                    <p class="field-hint">Weekly goals are best kept to one clear outcome.</p>
+                </div>
+                <div class="field">
+                    <label for="ds-type">Goal type</label>
+                    <select class="input" id="ds-type"><option>Weekly</option><option>Monthly</option></select>
+                </div>
+                <div class="field has-error">
+                    <label for="ds-date">Target date</label>
+                    <input class="input" id="ds-date" type="date" value="2026-11-01" aria-invalid="true" aria-describedby="ds-date-error">
+                    <p class="field-error" id="ds-date-error">Choose a date today or later.</p>
+                </div>
+                <div class="field">
+                    <label for="ds-notes">Notes</label>
+                    <textarea class="input textarea" id="ds-notes" placeholder="Optional notes for yourself"></textarea>
+                </div>
+                <div class="sb-cluster">
+                    <button class="btn btn-primary" type="button">Save goal</button>
+                    <button class="btn btn-ghost" type="button">Cancel</button>
+                </div>
+            </form>
+
+            <div class="panel sb-stack">
+                <h2 style="margin:0">Search and switches</h2>
+                <div class="search">
+                    {{ icon("search", 16) }}
+                    <input class="input" type="search" placeholder="Search resources by skill" aria-label="Search resources">
+                </div>
+                <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="switch-track"></span>
+                    <span>Show only favourites</span>
+                </label>
+                <label class="switch">
+                    <input type="checkbox">
+                    <span class="switch-track"></span>
+                    <span>Only items due this week</span>
+                </label>
+                <hr style="margin:.2rem 0">
+                <h3 style="margin:0;font-size:.95rem">Table</h3>
+                <div class="table-scroll">
+                    <table class="data-table">
+                        <thead><tr><th scope="col">Assessment</th><th scope="col">Score</th><th scope="col">Taken</th></tr></thead>
+                        <tbody>
+                            <tr><td>Python basics</td><td><span class="badge badge-mint">80%</span></td><td class="sb-muted">3 days ago</td></tr>
+                            <tr><td>SQL queries</td><td><span class="badge badge-amber">70%</span></td><td class="sb-muted">1 week ago</td></tr>
+                            <tr><td>HTML and CSS</td><td><span class="badge badge-mint">90%</span></td><td class="sb-muted">2 weeks ago</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- -------------------------------------------------------- feedback -->
+    <section class="ds-section" id="feedback">
+        <div class="sb-page-head">
+            <p class="sb-eyebrow">07 · Feedback</p>
+            <h2>Empty states, skeletons, timeline and toasts</h2>
+            <p>Empty states explain the next action. Loading is honest, never a fake spinner over guessed numbers.</p>
+        </div>
+
+        <div class="sb-grid sb-grid-2">
+            <section class="panel">
+                <div class="panel-head"><div><h2>Empty state</h2></div></div>
+                <div class="empty-state">
+                    <span class="empty-icon">{{ icon("folder", 18) }}</span>
+                    <div>
+                        <h3>No projects yet</h3>
+                        <p>Add your first project to show evidence of what you can build — it will also appear in your resume builder imports.</p>
+                        <p style="margin-top:.6rem"><button class="btn btn-primary btn-sm" type="button">Add a project</button></p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head"><div><h2>Loading skeleton</h2></div></div>
+                <div class="sb-stack">
+                    <div class="sb-split"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-circle"></div></div>
+                    <div class="skeleton skeleton-line" style="width:90%"></div>
+                    <div class="skeleton skeleton-line" style="width:76%"></div>
+                    <div class="skeleton skeleton-line" style="width:58%"></div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head"><div><h2>Recent activity</h2><p>Timeline from the activities table</p></div></div>
+                <ol class="timeline">
+                    <li>
+                        <span class="timeline-marker">{{ icon("check", 12) }}</span>
+                        <div class="timeline-body"><p>Completed a roadmap step: Build a REST API</p></div>
+                        <time>2h ago</time>
+                    </li>
+                    <li>
+                        <span class="timeline-marker">{{ icon("chart", 12) }}</span>
+                        <div class="timeline-body"><p>Scored 80% on the Python assessment</p></div>
+                        <time>Yesterday</time>
+                    </li>
+                    <li>
+                        <span class="timeline-marker">{{ icon("flag", 12) }}</span>
+                        <div class="timeline-body"><p>Created a weekly goal: finish SQL practice</p></div>
+                        <time>3 days ago</time>
+                    </li>
+                </ol>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head"><div><h2>Toasts</h2><p>Success, error and information</p></div></div>
+                <div class="sb-stack">
+                    <div class="toast toast--success" style="animation:none">
+                        <span class="stat-icon stat-icon--mint" style="width:1.8rem;height:1.8rem">{{ icon("check", 13) }}</span>
+                        <div><strong>Goal saved</strong><p>Your weekly goal is now on the dashboard.</p></div>
+                        <button class="toast-close" type="button" aria-label="Dismiss">×</button>
+                    </div>
+                    <div class="toast toast--error" style="animation:none">
+                        <span class="stat-icon stat-icon--coral" style="width:1.8rem;height:1.8rem">{{ icon("x", 13) }}</span>
+                        <div><strong>Could not upload</strong><p>That file is larger than 8 MB.</p></div>
+                        <button class="toast-close" type="button" aria-label="Dismiss">×</button>
+                    </div>
+                    <div class="toast toast--info" style="animation:none">
+                        <span class="stat-icon stat-icon--cyan" style="width:1.8rem;height:1.8rem">{{ icon("sparkle", 13) }}</span>
+                        <div><strong>Tip</strong><p>Analysing a saved resume skips the upload entirely.</p></div>
+                        <button class="toast-close" type="button" aria-label="Dismiss">×</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </section>
+
+    <!-- ------------------------------------------------------------ shell -->
+    <section class="ds-section" id="shell">
+        <div class="sb-page-head">
+            <p class="sb-eyebrow">08 · Navigation</p>
+            <h2>Grouped sidebar and app shell</h2>
+            <p>Only implemented modules appear. Student Progress Reports is deliberately absent until that page exists — no placeholder links.</p>
+        </div>
+
+        <div class="ds-demo-sidebar">
+            <aside class="sidebar" aria-label="Sidebar preview">
+                <a class="sidebar-brand" href="{{ url_for('dashboard.home') }}">
+                    <span class="brand-mark">{{ logo_mark(17) }}</span>
+                    <span class="brand-name">SkillBridge</span>
+                </a>
+                <nav class="sidebar-nav" aria-label="Sidebar preview navigation">
+                    <div class="nav-group">
+                        <p class="nav-group-label">Overview</p>
+                        <a href="#" class="active" aria-current="page">{{ icon("dashboard", 18) }}<span>Dashboard</span></a>
+                        <a href="#">{{ icon("user", 18) }}<span>My Profile</span></a>
+                    </div>
+                    <div class="nav-group">
+                        <p class="nav-group-label">Skill development</p>
+                        <a href="#">{{ icon("clipboard", 18) }}<span>My Skills</span></a>
+                        <a href="#">{{ icon("target", 18) }}<span>Skill Assessment</span></a>
+                        <a href="#">{{ icon("chart", 18) }}<span>Skill Gap Analysis</span></a>
+                        <a href="#">{{ icon("map", 18) }}<span>Career Roadmaps</span></a>
+                        <a href="#">{{ icon("book", 18) }}<span>Learning Resources</span></a>
+                        <a href="#">{{ icon("flag", 18) }}<span>Learning Goals</span></a>
+                    </div>
+                    <div class="nav-group">
+                        <p class="nav-group-label">Career management</p>
+                        <a href="#">{{ icon("folder", 18) }}<span>Project Tracker</span></a>
+                        <a href="#">{{ icon("shield", 18) }}<span>Career Readiness</span></a>
+                    </div>
+                    <div class="nav-group">
+                        <p class="nav-group-label">Career studio</p>
+                        <a href="#">{{ icon("file", 18) }}<span>Resume Builder</span></a>
+                        <a href="#">{{ icon("target", 18) }}<span>Resume Analyzer</span></a>
+                        <a href="#">{{ icon("shield", 18) }}<span>Certificate Vault</span></a>
+                    </div>
+                </nav>
+                <div class="sidebar-foot">
+                    <button class="theme-toggle" type="button" data-theme-toggle>
+                        <span class="icon-moon">{{ icon("moon", 14) }}</span>
+                        <span class="icon-sun">{{ icon("sun", 14) }}</span>
+                        <span data-theme-label>Dark</span>
+                    </button>
+                    <div class="user-chip">
+                        <span class="avatar" aria-hidden="true">A</span>
+                        <div class="user-chip-text">
+                            <p class="user-chip-name">Asha Verma</p>
+                            <p class="user-chip-email">asha@example.com</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            <div class="ds-demo-main">
+                <p class="sb-eyebrow" style="margin:0">Preview</p>
+                <h3>Active state, group labels, theme toggle and user chip</h3>
+                <p class="sb-muted" style="font-size:.88rem;margin:0">On desktop the sidebar collapses to a 78 px icon rail; below 900 px it becomes a slide-in sheet with the backdrop already used by the current app.</p>
+                <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+                    <div class="stat-card"><p class="stat-label">Skills</p><p class="stat-value">12</p><p class="stat-note">8 acquired</p></div>
+                    <div class="stat-card"><p class="stat-label">Roadmap</p><p class="stat-value">75%</p><p class="stat-note">6 of 8 steps</p></div>
+                </div>
+                <div class="ds-note">The real shell keeps the existing routes, CSRF tokens and mobile behaviour; only the visual layer and grouping change.</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head"><div><h2>Notes for review</h2></div></div>
+            <div class="sb-grid sb-grid-2">
+                <div>
+                    <h3 style="font-size:.95rem">What is fixed</h3>
+                    <ul class="sb-small sb-soft" style="margin:.4rem 0 0;padding-left:1.1rem">
+                        <li>Light canvas default, dark theme via <code>data-theme</code></li>
+                        <li>No new libraries or external requests</li>
+                        <li>Reduced-motion and keyboard focus handled</li>
+                        <li>Existing class names kept so templates survive</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="font-size:.95rem">Not started yet</h3>
+                    <ul class="sb-small sb-soft" style="margin:.4rem 0 0;padding-left:1.1rem">
+                        <li>Dashboard markup and queries (Phase 3)</li>
+                        <li>Module reskins (Phase 4)</li>
+                        <li>Shell integration and collapses (Phase 3)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div class="toast-region" aria-live="polite" aria-atomic="true">
+    <div class="toast toast--success" style="animation:none">
+        <span class="stat-icon stat-icon--mint" style="width:1.8rem;height:1.8rem">{{ icon("check", 13) }}</span>
+        <div><strong>Design system loaded</strong><p>Tokens, components and charts are live on this page.</p></div>
+        <button class="toast-close" type="button" aria-label="Dismiss" onclick="this.closest('.toast').remove()">×</button>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/theme.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+</body>
+</html>

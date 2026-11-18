@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Create your account | SkillBridge{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">{% endblock %}
+
+{% block content %}
+{% from "_forms.html" import field %}
+<section class="auth">
+    <div class="container auth-layout">
+        <div class="auth-intro">
+            <h1>Create your account.</h1>
+            <p class="lead">It takes a minute. Add your skills and pick a career path whenever you are ready.</p>
+            <ul class="auth-points">
+                <li>{{ icon("shield", 20) }}<span>Your data is private. Each account only sees its own records.</span></li>
+                <li>{{ icon("shield", 20) }}<span>Your password is stored as a secure hash, never as plain text.</span></li>
+            </ul>
+        </div>
+
+        <div class="auth-panel">
+            <form method="post" data-loading-form>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {{ field("name", "Full name", value=form.name, error=errors.get("name"), autocomplete="name", minlength=2, maxlength=60, autofocus=True) }}
+                {{ field("email", "Email address", type="email", value=form.email, error=errors.get("email"), autocomplete="email", maxlength=254) }}
+                {{ field("password", "Password", type="password", error=errors.get("password"), hint="At least 8 characters, with a letter and a number.", autocomplete="new-password", minlength=8, maxlength=128) }}
+                {{ field("confirm_password", "Confirm password", type="password", error=errors.get("confirm_password"), autocomplete="new-password", maxlength=128) }}
+                <button type="submit" class="btn btn-primary btn-lg btn-block">Create account</button>
+            </form>
+
+            <p class="auth-switch">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}

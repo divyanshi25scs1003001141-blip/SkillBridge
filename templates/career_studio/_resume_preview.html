@@ -1,0 +1,125 @@
+{# A single-column, ATS-friendly resume preview. Used inside the editor and by
+   the live preview endpoint, so the screen and the PDF always agree. #}
+<article class="resume-sheet template-{{ resume.template }}">
+    <header class="resume-head">
+        <h2 class="resume-name">{{ resume.full_name or 'Your name' }}</h2>
+        {% set contact = [resume.email, resume.phone, resume.location] | select | list %}
+        {% if contact %}
+        <p class="resume-contact">{{ contact | join('  ·  ') }}</p>
+        {% endif %}
+        {% set links = [resume.linkedin, resume.github, resume.portfolio] | select | list %}
+        {% if links %}
+        <p class="resume-links">
+            {% for link in links %}
+            <a href="{{ link }}" target="_blank" rel="noopener noreferrer nofollow">{{ link.replace('https://', '').replace('http://', '').rstrip('/') }}</a>{% if not loop.last %} · {% endif %}
+            {% endfor %}
+        </p>
+        {% endif %}
+    </header>
+
+    {% if resume.summary %}
+    <section class="resume-block">
+        <h3>Professional summary</h3>
+        <p class="resume-text">{{ resume.summary }}</p>
+    </section>
+    {% endif %}
+
+    {% if resume.objective %}
+    <section class="resume-block">
+        <h3>Career objective</h3>
+        <p class="resume-text">{{ resume.objective }}</p>
+    </section>
+    {% endif %}
+
+    {% if resume.template == 'corporate' %}
+        {% set blocks = ['experience', 'education', 'skills', 'projects'] %}
+    {% elif resume.template == 'technical' %}
+        {% set blocks = ['skills', 'projects', 'education', 'experience'] %}
+    {% else %}
+        {% set blocks = ['education', 'skills', 'projects', 'experience'] %}
+    {% endif %}
+
+    {% for block in blocks %}
+        {% set rows = grouped.get(block, []) %}
+        {% if rows %}
+        <section class="resume-block">
+            <h3>
+                {% if block == 'education' %}Education
+                {% elif block == 'skills' %}Technical skills
+                {% elif block == 'projects' %}Projects
+                {% else %}Internship and work experience{% endif %}
+            </h3>
+
+            {% if block == 'skills' %}
+                {% for item in rows %}
+                <p class="resume-skill"><strong>{{ item.subtitle or 'Skills' }}:</strong> {{ item.title }}</p>
+                {% endfor %}
+
+            {% elif block == 'projects' %}
+                {% for item in rows %}
+                <div class="resume-item">
+                    <p class="resume-item-head"><strong>{{ item.title }}</strong>{% if item.meta %} <span class="resume-item-meta">{{ item.meta }}</span>{% endif %}</p>
+                    {% if item.detail %}<p class="resume-text">{{ item.detail }}</p>{% endif %}
+                    {% if item.extra %}<p class="resume-text">{{ item.extra }}</p>{% endif %}
+                    {% if item.link or item.link2 %}
+                    <p class="resume-links">
+                        {% if item.link %}<a href="{{ item.link }}" target="_blank" rel="noopener noreferrer nofollow">{{ item.link.replace('https://', '').replace('http://', '').rstrip('/') }}</a>{% endif %}
+                        {% if item.link and item.link2 %} · {% endif %}
+                        {% if item.link2 %}<a href="{{ item.link2 }}" target="_blank" rel="noopener noreferrer nofollow">{{ item.link2.replace('https://', '').replace('http://', '').rstrip('/') }}</a>{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+            {% elif block == 'experience' %}
+                {% for item in rows %}
+                <div class="resume-item">
+                    <p class="resume-item-head">
+                        <strong>{{ item.title or item.subtitle }}</strong>
+                        {% if item.title and item.subtitle %} — {{ item.subtitle }}{% endif %}
+                        {% if item.meta %} <span class="resume-item-meta">{{ item.meta }}</span>{% endif %}
+                    </p>
+                    {% if item.detail %}<p class="resume-text">{{ item.detail }}</p>{% endif %}
+                    {% if item.extra %}<p class="resume-text">{{ item.extra }}</p>{% endif %}
+                </div>
+                {% endfor %}
+
+            {% else %}
+                {% for item in rows %}
+                <div class="resume-item">
+                    <p class="resume-item-head"><strong>{{ item.title }}</strong>{% if item.subtitle %} — {{ item.subtitle }}{% endif %}</p>
+                    {% if item.meta %}<p class="resume-item-meta">{{ item.meta }}</p>{% endif %}
+                    {% if item.detail %}<p class="resume-text">{{ item.detail }}</p>{% endif %}
+                </div>
+                {% endfor %}
+            {% endif %}
+        </section>
+        {% endif %}
+    {% endfor %}
+
+    {% if grouped.certification %}
+    <section class="resume-block">
+        <h3>Certifications</h3>
+        {% for item in grouped.certification %}
+        <div class="resume-item">
+            <p class="resume-item-head"><strong>{{ item.title }}</strong>{% if item.subtitle %} — {{ item.subtitle }}{% endif %}</p>
+            {% if item.meta %}<p class="resume-item-meta">{{ item.meta }}</p>{% endif %}
+            {% if item.link %}<p class="resume-links"><a href="{{ item.link }}" target="_blank" rel="noopener noreferrer nofollow">{{ item.link.replace('https://', '').replace('http://', '').rstrip('/') }}</a></p>{% endif %}
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if grouped.section %}
+        {% for item in grouped.section %}
+        <section class="resume-block">
+            <h3>{{ item.title }}</h3>
+            {% if item.detail %}<p class="resume-text">{{ item.detail }}</p>{% endif %}
+        </section>
+        {% endfor %}
+    {% endif %}
+
+    {% if not resume.summary and not resume.objective and not grouped.education and not grouped.skill and not grouped.project and not grouped.experience and not grouped.certification and not grouped.section %}
+    <p class="resume-empty">Start filling the form on the left — the preview updates as you type.</p>
+    {% endif %}
+</article>

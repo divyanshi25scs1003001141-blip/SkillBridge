@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}About | SkillBridge{% endblock %}
+{% block meta_description %}Why SkillBridge exists, who it is for, and how it handles your data.{% endblock %}
+
+{% block content %}
+
+<section class="page-header">
+    <div class="container">
+        <h1>About SkillBridge</h1>
+        <p class="lead">A learning and career readiness platform for college students who want a clear view of their skills and their next steps.</p>
+    </div>
+</section>
+
+<section class="section section-flush">
+    <div class="container">
+
+        <article class="about-row">
+            <h2>Why it exists</h2>
+            <div class="prose">
+                <p>Many students know which career they are interested in but not which skills it needs, or how far along they already are. Advice is scattered across videos, forums and roadmaps that never connect to what you have actually done.</p>
+                <p>SkillBridge puts it in one place. You record your skills, test your knowledge, follow a roadmap, keep track of your projects and goals, and see your progress in a single dashboard.</p>
+            </div>
+        </article>
+
+        <article class="about-row">
+            <h2>Who it is for</h2>
+            <div class="prose">
+                <p>Mainly college students, from first-year beginners choosing a direction to final-year students getting ready to apply. You do not need to know which career you want. You can start with a single assessment and explore from there.</p>
+            </div>
+        </article>
+
+        <article class="about-row">
+            <h2>How it treats your data</h2>
+            <div class="prose">
+                <p>Every account only ever sees its own records. Passwords are stored as secure hashes, never as plain text. Scores, skill gaps and reports are worked out with plain, readable rules, so there are no paid AI services and no hidden scoring.</p>
+            </div>
+        </article>
+
+        <article class="about-row">
+            <h2>What it does not do</h2>
+            <div class="prose">
+                <p>SkillBridge shows your learning progress and career preparation. It does not predict whether you will be selected for a job, and it never guarantees one. Treat it as a way to see what to work on next.</p>
+            </div>
+        </article>
+
+        <article class="about-row">
+            <h2>How it is built</h2>
+            <div class="prose">
+                <p>Python and Flask on the server, SQLite for storage, and HTML, CSS and plain JavaScript in the browser. Free tools only.</p>
+            </div>
+        </article>
+
+    </div>
+</section>
+
+<section class="section section-tight">
+    <div class="container">
+        <div class="cta-band">
+            <h2>Want the details?</h2>
+            <p>The features page lists everything SkillBridge does, tool by tool.</p>
+            <a class="btn btn-primary btn-lg" href="{{ url_for('main.features') }}">See the features</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

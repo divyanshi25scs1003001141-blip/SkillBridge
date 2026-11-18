@@ -1,0 +1,85 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Resume Builder | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Career studio · Resume builder</p>
+    <h1>Resume Builder</h1>
+    <p>Build ATS-friendly resumes from your real SkillBridge data. Four single-column templates, a live preview, PDF export and printing.</p>
+    <div class="page-actions page-actions--tight">
+        <a class="btn btn-primary" href="{{ url_for('resumes.create_resume') }}">Create a resume</a>
+        <a class="btn btn-outline" href="{{ url_for('certificates.vault') }}">Certificate Vault</a>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Saved resumes</p>
+            <span class="stat-icon">{{ icon("file", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ resumes|length }}</p>
+        <p class="stat-note">Each one keeps its own details</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Templates available</p>
+            <span class="stat-icon stat-icon--cyan">{{ icon("sparkle", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ templates|length }}</p>
+        <p class="stat-note">Switch any time without losing content</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Certificates in vault</p>
+            <span class="stat-icon stat-icon--mint">{{ icon("shield", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ certificate_total }}</p>
+        <p class="stat-note">Selectable while editing a resume</p>
+    </article>
+</div>
+
+{% if resumes %}
+<section class="card-grid" aria-label="Your resumes">
+    {% for resume in resumes %}
+    <article class="panel module-card resume-card">
+        <div class="module-card-top">
+            <span class="badge badge-neutral">{{ templates.get(resume.template, 'Classic Professional') }}</span>
+            <span class="sb-muted sb-small">{{ resume.item_count }} block{{ '' if resume.item_count == 1 else 's' }}</span>
+        </div>
+        <h2>{{ resume.title }}</h2>
+        <p class="sb-soft">{{ resume.full_name or 'No name yet' }}{% if resume.email %} · {{ resume.email }}{% endif %}</p>
+        <p class="sb-muted sb-small">Updated {{ resume.updated_at[:16] }}</p>
+        <div class="resume-card-actions">
+            <a class="btn btn-primary btn-sm" href="{{ url_for('resumes.edit_resume', resume_id=resume.id) }}">Edit</a>
+            <a class="btn btn-outline btn-sm" href="{{ url_for('resumes.download_pdf', resume_id=resume.id) }}">PDF</a>
+            <a class="btn btn-quiet btn-sm" href="{{ url_for('resumes.print_resume', resume_id=resume.id) }}" target="_blank" rel="noopener">Print</a>
+            <form method="post" action="{{ url_for('resumes.duplicate_resume', resume_id=resume.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-quiet btn-sm" type="submit">Duplicate</button>
+            </form>
+            <form method="post" action="{{ url_for('resumes.delete_resume', resume_id=resume.id) }}" data-confirm="Delete this resume? The information in it cannot be recovered.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-outline btn-sm cert-delete" type="submit">Delete</button>
+            </form>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% else %}
+<section class="panel module-panel">
+    <div class="empty-state">
+        <span class="empty-icon">{{ icon("file", 22) }}</span>
+        <div>
+            <h2>No resumes yet</h2>
+            <p>Start from a blank resume: your name and email come from your account, then add education, skills, projects and certificates. Anything you import stays editable.</p>
+            <p><a class="btn btn-primary btn-sm" href="{{ url_for('resumes.create_resume') }}">Create your first resume</a></p>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<p class="gap-note">Every template is a single column with standard headings so resume-reading software can parse it. Nothing on the page is invented — the PDF is built only from what you entered.</p>
+{% endblock %}

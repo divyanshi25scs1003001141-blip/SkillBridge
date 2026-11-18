@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Features | SkillBridge{% endblock %}
+{% block meta_description %}Skill assessments, career roadmaps, skill gap analysis, learning resources, a project tracker, goals and a career readiness report.{% endblock %}
+
+{% block content %}
+
+<section class="page-header">
+    <div class="container">
+        <h1>What SkillBridge does</h1>
+        <p class="lead">{{ features|length }} tools, one account. Everything you add is saved to your own profile, and nobody else can see it.</p>
+    </div>
+</section>
+
+<section class="section section-flush">
+    <div class="container">
+        {% for feature in features %}
+        <article class="feature-row">
+            <div class="feature-row-head">
+                <span class="feature-icon">{{ icon(feature.icon, 22) }}</span>
+                <h2>{{ feature.title }}</h2>
+                <p>{{ feature.summary }}</p>
+            </div>
+            <ul class="check-list">
+                {% for point in feature.points %}
+                <li>{{ icon("check", 18) }}<span>{{ point }}</span></li>
+                {% endfor %}
+            </ul>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="section section-tight">
+    <div class="container">
+        <div class="cta-band">
+            <h2>Built to show progress, not promise outcomes.</h2>
+            <p>SkillBridge helps you see how prepared you are and what to work on next. It does not predict or guarantee job selection.</p>
+            <a class="btn btn-outline btn-lg" href="{{ url_for('main.about') }}">Read about SkillBridge</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

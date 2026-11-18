@@ -1,0 +1,100 @@
+{% extends "dashboard/layout.html" %}
+{% from "_forms.html" import field, select_field, textarea_field, checkbox_group %}
+
+{% block title %}My Profile | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Account</p>
+    <h1>My Profile</h1>
+    <p>Keep your details up to date. They help SkillBridge fit your career plan to you.</p>
+</div>
+
+<div class="profile-grid">
+
+    {# ---- Left: what is saved right now ---- #}
+    <aside class="panel profile-card" aria-label="Your saved details">
+        <div class="profile-identity">
+            <span class="avatar avatar-lg" aria-hidden="true">{{ current_user.name[0]|upper }}</span>
+            <div>
+                <h2>{{ current_user.name }}</h2>
+                <p class="profile-email">{{ current_user.email }}</p>
+            </div>
+        </div>
+
+        <dl class="detail-list">
+            <div>
+                <dt>Member since</dt>
+                <dd>{{ current_user.created_at|date_label }}</dd>
+            </div>
+            <div>
+                <dt>College</dt>
+                <dd {% if not saved.college_name %}class="is-empty"{% endif %}>{{ saved.college_name or "Not added yet" }}</dd>
+            </div>
+            <div>
+                <dt>Education</dt>
+                <dd {% if not saved.education_details %}class="is-empty"{% endif %}>{{ saved.education_details or "Not added yet" }}</dd>
+            </div>
+            <div>
+                <dt>Year of study</dt>
+                <dd {% if not saved.year_of_study %}class="is-empty"{% endif %}>{{ saved.year_of_study or "Not added yet" }}</dd>
+            </div>
+            <div>
+                <dt>Career interests</dt>
+                <dd {% if not saved.career_interests %}class="is-empty"{% endif %}>{{ saved.career_interests or "Not added yet" }}</dd>
+            </div>
+            <div>
+                <dt>Preferred fields</dt>
+                <dd {% if not saved_fields %}class="is-empty"{% endif %}>
+                    {% if saved_fields %}
+                    <ul class="chips chips-small">
+                        {% for item in saved_fields %}<li>{{ item }}</li>{% endfor %}
+                    </ul>
+                    {% else %}Not added yet{% endif %}
+                </dd>
+            </div>
+        </dl>
+    </aside>
+
+    {# ---- Right: the edit form ---- #}
+    <section class="panel" aria-labelledby="edit-heading">
+        <div class="panel-head">
+            <div>
+                <h2 id="edit-heading">Edit your details</h2>
+                <p>Saved changes apply to your whole account straight away.</p>
+            </div>
+        </div>
+
+        <form method="post" data-loading-form>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-section">
+                <h3>Personal details</h3>
+                {{ field("name", "Full name", value=form.name, error=errors.get("name"), autocomplete="name", minlength=2, maxlength=60) }}
+                <p class="field-hint">Your email address ({{ current_user.email }}) cannot be changed here.</p>
+            </div>
+
+            <div class="form-section">
+                <h3>Study</h3>
+                <div class="form-row">
+                    {{ field("college_name", "College name", value=form.college_name, error=errors.get("college_name"), required=False, maxlength=120) }}
+                    {{ select_field("year_of_study", "Current year of study", year_options, selected=form.year_of_study, error=errors.get("year_of_study"), placeholder="Choose your year") }}
+                </div>
+                {{ field("education_details", "Education details", value=form.education_details, error=errors.get("education_details"), hint="Your degree and branch, for example B.Tech in Computer Science.", required=False, maxlength=150) }}
+            </div>
+
+            <div class="form-section">
+                <h3>Interests</h3>
+                {{ textarea_field("career_interests", "Career interests", value=form.career_interests, error=errors.get("career_interests"), hint="The roles or areas you are curious about. Up to 300 characters.", rows=3, maxlength=300) }}
+                {{ checkbox_group("preferred_fields", "Preferred technology fields", field_options, selected=form.fields, error=errors.get("preferred_fields"), hint="Tick every field you would like to work in.") }}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg">Save changes</button>
+                <a class="btn btn-ghost" href="{{ url_for('dashboard.home') }}">Back to dashboard</a>
+            </div>
+        </form>
+    </section>
+
+</div>
+{% endblock %}

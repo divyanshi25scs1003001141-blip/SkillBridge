@@ -1,0 +1,87 @@
+{#
+  _forms.html - reusable form fields, so every form looks and behaves the same.
+  Use them like this:
+      {% from "_forms.html" import field, select_field, textarea_field, checkbox_group %}
+      {{ field("email", "Email address", type="email", value=email, error=errors.get("email")) }}
+  The id is also used as the input's name, which is how Flask reads it.
+#}
+{% macro field(id, label, type="text", value="", error=None, hint=None, autocomplete=None,
+               required=True, minlength=None, maxlength=None, autofocus=False) %}
+<div class="field">
+    <label for="{{ id }}">{{ label }}</label>
+    {% if type == "password" %}<div class="password-wrap">{% endif %}
+    <input class="input{% if error %} has-error{% endif %}"
+           type="{{ type }}" id="{{ id }}" name="{{ id }}"
+           {% if type != "password" %}value="{{ value }}"{% endif %}
+           {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+           {% if required %}required{% endif %}
+           {% if minlength %}minlength="{{ minlength }}"{% endif %}
+           {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+           {% if autofocus %}autofocus{% endif %}
+           {% if error %}aria-invalid="true" aria-describedby="{{ id }}-message"
+           {% elif hint %}aria-describedby="{{ id }}-message"{% endif %}>
+    {% if type == "password" %}
+        <button type="button" class="password-toggle" data-toggle-password="{{ id }}" aria-pressed="false">Show</button>
+    </div>
+    {% endif %}
+    {% if error %}
+        <p class="field-error" id="{{ id }}-message">{{ error }}</p>
+    {% elif hint %}
+        <p class="field-hint" id="{{ id }}-message">{{ hint }}</p>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# A drop-down list. `options` is a list of text values. #}
+{% macro select_field(id, label, options, selected="", error=None, hint=None, placeholder="Select an option") %}
+<div class="field">
+    <label for="{{ id }}">{{ label }}</label>
+    <select class="input select{% if error %} has-error{% endif %}" id="{{ id }}" name="{{ id }}"
+            {% if error %}aria-invalid="true" aria-describedby="{{ id }}-message"
+            {% elif hint %}aria-describedby="{{ id }}-message"{% endif %}>
+        <option value="">{{ placeholder }}</option>
+        {% for option in options %}
+        <option value="{{ option }}" {% if option == selected %}selected{% endif %}>{{ option }}</option>
+        {% endfor %}
+    </select>
+    {% if error %}
+        <p class="field-error" id="{{ id }}-message">{{ error }}</p>
+    {% elif hint %}
+        <p class="field-hint" id="{{ id }}-message">{{ hint }}</p>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# A multi-line text box. #}
+{% macro textarea_field(id, label, value="", error=None, hint=None, rows=4, maxlength=None, required=False) %}
+<div class="field">
+    <label for="{{ id }}">{{ label }}</label>
+    <textarea class="input textarea{% if error %} has-error{% endif %}" id="{{ id }}" name="{{ id }}" rows="{{ rows }}"
+              {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+              {% if required %}required{% endif %}
+              {% if error %}aria-invalid="true" aria-describedby="{{ id }}-message"
+              {% elif hint %}aria-describedby="{{ id }}-message"{% endif %}>{{ value }}</textarea>
+    {% if error %}
+        <p class="field-error" id="{{ id }}-message">{{ error }}</p>
+    {% elif hint %}
+        <p class="field-hint" id="{{ id }}-message">{{ hint }}</p>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# A group of tick boxes. All boxes share one name, so Flask can read them with request.form.getlist(name). #}
+{% macro checkbox_group(name, label, options, selected=[], error=None, hint=None) %}
+<fieldset class="field choice-group">
+    <legend>{{ label }}</legend>
+    {% if hint %}<p class="field-hint">{{ hint }}</p>{% endif %}
+    <div class="choice-grid">
+        {% for option in options %}
+        <label class="choice">
+            <input type="checkbox" name="{{ name }}" value="{{ option }}" {% if option in selected %}checked{% endif %}>
+            <span>{{ option }}</span>
+        </label>
+        {% endfor %}
+    </div>
+    {% if error %}<p class="field-error">{{ error }}</p>{% endif %}
+</fieldset>
+{% endmacro %}

@@ -1,0 +1,151 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Certificate Vault | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Career studio</p>
+    <h1>Certificate Vault</h1>
+    <p>Every certificate, badge and course record you keep here belongs only to you. Files are stored privately — nobody else can open them, even with the link.</p>
+    <div class="page-actions page-actions--tight">
+        <a class="btn btn-primary" href="{{ url_for('certificates.upload_certificate') }}">{{ icon("file", 18) }} Upload certificate</a>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Certificates stored</p>
+            <span class="stat-icon">{{ icon("shield", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ total }}</p>
+        <p class="stat-note">Saved in your private vault</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Categories used</p>
+            <span class="stat-icon stat-icon--cyan">{{ icon("folder", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ counts|length }}</p>
+        <p class="stat-note">Across {{ categories|length }} available categories</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Expiring soon</p>
+            <span class="stat-icon stat-icon--amber">{{ icon("flag", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ expiring|length }}</p>
+        <p class="stat-note">Within 60 days or already expired</p>
+    </article>
+</div>
+
+<section class="panel module-panel">
+    <div class="panel-head">
+        <div>
+            <h2>Find a certificate</h2>
+            <p>Search by title, organisation or skill, then narrow down by category.</p>
+        </div>
+    </div>
+    <form class="filter-bar" method="get" action="{{ url_for('certificates.vault') }}">
+        <div class="field-inline">
+            <label for="q">Search</label>
+            <input class="input" id="q" name="q" type="search" value="{{ search }}" placeholder="e.g. Python, NPTEL, internship">
+        </div>
+        <div class="field-inline">
+            <label for="category">Category</label>
+            <select class="input" id="category" name="category">
+                <option value="">All categories</option>
+                {% for item in categories %}
+                <option value="{{ item }}" {% if category == item %}selected{% endif %}>{{ item }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field-inline">
+            <label for="sort">Sort by</label>
+            <select class="input" id="sort" name="sort">
+                {% for key, label in sort_options.items() %}
+                <option value="{{ key }}" {% if sort == key %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button class="btn btn-primary" type="submit">Apply</button>
+            {% if search or category or sort != 'newest' %}
+            <a class="btn btn-outline" href="{{ url_for('certificates.vault') }}">Clear</a>
+            {% endif %}
+        </div>
+    </form>
+</section>
+
+{% if certificates %}
+<section class="cert-grid" aria-label="Your certificates">
+    {% for certificate in certificates %}
+    <article class="panel module-card cert-card">
+        <div class="cert-thumb">
+            {% if certificate.is_image %}
+            <img src="{{ url_for('certificates.preview_file', certificate_id=certificate.id) }}" alt="Preview of {{ certificate.title }}" loading="lazy">
+            {% else %}
+            <span class="cert-thumb-icon">{{ icon("file", 28) }}</span>
+            <span class="cert-thumb-label">{{ certificate.mime_type == 'application/pdf' and 'PDF document' or 'Document' }}</span>
+            {% endif %}
+        </div>
+
+        <div class="cert-body">
+            <div class="cert-badges">
+                <span class="badge">{{ certificate.category }}</span>
+                {% if certificate.expiry_state == 'expired' %}
+                <span class="badge badge-overdue">Expired</span>
+                {% elif certificate.expiry_state == 'soon' %}
+                <span class="badge badge-amber">Expires in {{ certificate.days_to_expiry }} day{{ '' if certificate.days_to_expiry == 1 else 's' }}</span>
+                {% endif %}
+            </div>
+            <h2>{{ certificate.title }}</h2>
+            <p class="sb-soft">{{ certificate.organization or 'Issuing organisation not recorded' }}</p>
+            <p class="cert-meta">
+                {% if certificate.issue_date %}Issued {{ certificate.issue_date }}{% else %}Issue date not recorded{% endif %}
+                {% if certificate.credential_url %} · <a href="{{ certificate.credential_url }}" target="_blank" rel="noopener noreferrer nofollow">verification link</a>{% endif %}
+            </p>
+        </div>
+
+        <div class="cert-actions">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('certificates.view_certificate', certificate_id=certificate.id) }}">View</a>
+            <a class="btn btn-outline btn-sm" href="{{ url_for('certificates.download_file', certificate_id=certificate.id) }}">Download</a>
+            <a class="btn btn-quiet btn-sm" href="{{ url_for('certificates.edit_certificate', certificate_id=certificate.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('certificates.delete_certificate', certificate_id=certificate.id) }}" data-confirm="Delete this certificate and its stored file? This cannot be undone.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-outline btn-sm cert-delete" type="submit">Delete</button>
+            </form>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% elif total %}
+<section class="panel module-panel">
+    <div class="empty-state">
+        <span class="empty-icon">{{ icon("search", 22) }}</span>
+        <div>
+            <h2>No certificate matches those filters</h2>
+            <p>Try a different word, or clear the filters to see all {{ total }} of your certificates.</p>
+            <p><a class="text-link" href="{{ url_for('certificates.vault') }}">Clear filters</a></p>
+        </div>
+    </div>
+</section>
+{% else %}
+<section class="panel module-panel">
+    <div class="empty-state">
+        <span class="empty-icon">{{ icon("file", 22) }}</span>
+        <div>
+            <h2>Your vault is empty</h2>
+            <p>Upload a course certificate, internship letter or hackathon badge (PDF, JPG or PNG, up to 8 MB). You can then view, download and select it while building a resume.</p>
+            <p><a class="btn btn-primary btn-sm" href="{{ url_for('certificates.upload_certificate') }}">Upload your first certificate</a></p>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<p class="gap-note">
+    Uploaded documents are stored privately for your account. A certificate counts as
+    “uploaded”, not independently verified — a verification link only means you added one.
+</p>
+{% endblock %}

@@ -1,0 +1,429 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}{% if resume.id %}Edit resume{% else %}New resume{% endif %} | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">CAREER STUDIO · RESUME BUILDER</p>
+    <h1>{% if resume.id %}{{ resume.title }}{% else %}Build a new resume{% endif %}</h1>
+    <p>Everything on the right comes from what you type on the left. Nothing is invented, and the preview is the same layout the PDF uses.</p>
+    <div class="page-actions page-actions--tight">
+        {% if resume.id %}
+        <a class="btn btn-outline" href="{{ url_for('resumes.download_pdf', resume_id=resume.id) }}">Download PDF</a>
+        <a class="btn btn-outline" href="{{ url_for('resumes.print_resume', resume_id=resume.id) }}" target="_blank" rel="noopener">Print</a>
+        <a class="btn btn-quiet" href="{{ url_for('resumes.list_resumes') }}">All resumes</a>
+        {% else %}
+        <a class="btn btn-quiet" href="{{ url_for('resumes.list_resumes') }}">All resumes</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if errors %}
+<div class="alert alert-error" role="alert">
+    <span>Please fix {{ errors|length }} field{{ '' if errors|length == 1 else 's' }} before saving.</span>
+</div>
+{% endif %}
+
+{% if resume.id %}
+<div class="import-bar">
+    <span class="muted">Import from SkillBridge:</span>
+    <form method="post" action="{{ url_for('resumes.import_skills', resume_id=resume.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-outline btn-sm" type="submit">Skills</button>
+    </form>
+    <form method="post" action="{{ url_for('resumes.import_projects', resume_id=resume.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-outline btn-sm" type="submit">Projects</button>
+    </form>
+    <form method="post" action="{{ url_for('resumes.import_profile', resume_id=resume.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-outline btn-sm" type="submit">Profile details</button>
+    </form>
+    <span class="muted">Imported items can be edited or removed before you download the PDF.</span>
+</div>
+{% else %}
+<p class="field-hint">Save the resume once to unlock one-click imports from My Skills, Projects and your profile.</p>
+{% endif %}
+
+<div class="editor-layout">
+    <form class="panel editor-form" method="post" id="resume-form"
+          action="{{ url_for('resumes.edit_resume', resume_id=resume.id) if resume.id else url_for('resumes.create_resume') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <section class="editor-section">
+            <h2>Resume name and template</h2>
+            <div class="form-grid">
+                <div class="field-inline">
+                    <label for="title">Resume name (only you see this)</label>
+                    <input class="input" id="title" name="title" maxlength="80" value="{{ resume.title }}" placeholder="Backend developer resume">
+                </div>
+                <div class="field-inline">
+                    <label for="template">Template</label>
+                    <select class="input" id="template" name="template">
+                        {% for key, label in templates %}
+                        <option value="{{ key }}" {% if resume.template == key %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="field-hint">All four stay single-column so ATS software can read them.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="editor-section">
+            <h2>Personal information</h2>
+            <div class="form-grid">
+                <div class="field-inline">
+                    <label for="full_name">Full name <span class="req">*</span></label>
+                    <input class="input {% if errors.full_name %}has-error{% endif %}" id="full_name" name="full_name" maxlength="80" value="{{ resume.full_name }}">
+                    {% if errors.full_name %}<p class="field-error">{{ errors.full_name }}</p>{% endif %}
+                </div>
+                <div class="field-inline">
+                    <label for="email">Professional email</label>
+                    <input class="input {% if errors.email %}has-error{% endif %}" id="email" name="email" type="email" maxlength="120" value="{{ resume.email }}">
+                    {% if errors.email %}<p class="field-error">{{ errors.email }}</p>{% endif %}
+                </div>
+                <div class="field-inline">
+                    <label for="phone">Phone</label>
+                    <input class="input" id="phone" name="phone" maxlength="30" value="{{ resume.phone }}">
+                </div>
+                <div class="field-inline">
+                    <label for="location">City and country</label>
+                    <input class="input" id="location" name="location" maxlength="90" value="{{ resume.location }}">
+                </div>
+                <div class="field-inline">
+                    <label for="linkedin">LinkedIn</label>
+                    <input class="input {% if errors.linkedin %}has-error{% endif %}" id="linkedin" name="linkedin" placeholder="https://" value="{{ resume.linkedin }}">
+                    {% if errors.linkedin %}<p class="field-error">{{ errors.linkedin }}</p>{% endif %}
+                </div>
+                <div class="field-inline">
+                    <label for="github">GitHub</label>
+                    <input class="input {% if errors.github %}has-error{% endif %}" id="github" name="github" placeholder="https://" value="{{ resume.github }}">
+                    {% if errors.github %}<p class="field-error">{{ errors.github }}</p>{% endif %}
+                </div>
+                <div class="field-inline">
+                    <label for="portfolio">Portfolio</label>
+                    <input class="input {% if errors.portfolio %}has-error{% endif %}" id="portfolio" name="portfolio" placeholder="https://" value="{{ resume.portfolio }}">
+                    {% if errors.portfolio %}<p class="field-error">{{ errors.portfolio }}</p>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="editor-section">
+            <h2>Summary and objective</h2>
+            <div class="field-inline">
+                <label for="summary">Professional summary</label>
+                <textarea class="input textarea" id="summary" name="summary" rows="4" maxlength="1500" placeholder="Two or three lines about what you study, what you build and what you are looking for.">{{ resume.summary }}</textarea>
+                <p class="field-hint">Facts only — your own coursework, skills and projects.</p>
+            </div>
+            <div class="field-inline">
+                <label for="objective">Career objective <span class="muted">(optional)</span></label>
+                <textarea class="input textarea" id="objective" name="objective" rows="3" maxlength="1500" placeholder="The role or internship you are working towards.">{{ resume.objective }}</textarea>
+            </div>
+        </section>
+
+        <section class="editor-section">
+            <div class="section-head-row">
+                <h2>Education</h2>
+                <button class="btn btn-quiet btn-sm" type="button" data-add-row="education">Add education</button>
+            </div>
+            <div data-rows="education">
+                {% for item in grouped.education %}
+                <fieldset class="editor-row">
+                    <legend>Education {{ loop.index }}</legend>
+                    <div class="form-grid">
+                        <div class="field-inline"><label>Institution</label><input class="input" name="edu_institution" maxlength="120" value="{{ item.subtitle }}"></div>
+                        <div class="field-inline"><label>Degree</label><input class="input" name="edu_degree" maxlength="120" value="{{ item.title }}"></div>
+                        <div class="field-inline"><label>Course or specialisation</label><input class="input" name="edu_field" maxlength="80" value="{{ item.meta.split(' | ')[0] if item.meta else '' }}"></div>
+                        <div class="field-inline"><label>Start year</label><input class="input" name="edu_start" maxlength="10" value="{{ item.meta.split(' | ')[1].split(' - ')[0] if item.meta and ' | ' in item.meta and ' - ' in item.meta.split(' | ')[1] else '' }}"></div>
+                        <div class="field-inline"><label>Graduation year</label><input class="input" name="edu_end" maxlength="10" value="{{ item.meta.split(' | ')[1].split(' - ')[1] if item.meta and ' | ' in item.meta and ' - ' in item.meta.split(' | ')[1] else '' }}"></div>
+                        <div class="field-inline"><label>CGPA or percentage</label><input class="input" name="edu_grade" maxlength="40" value="{{ item.meta.split(' | ')[2] if item.meta and item.meta.count(' | ') >= 2 else '' }}"></div>
+                        <div class="field-inline field-full"><label>Relevant coursework</label><input class="input" name="edu_coursework" maxlength="400" value="{{ item.detail }}"></div>
+                    </div>
+                    <div class="row-tools">
+                        <button class="btn btn-quiet btn-sm" type="button" data-move="up">Move up</button>
+                        <button class="btn btn-quiet btn-sm" type="button" data-move="down">Move down</button>
+                        <button class="btn btn-quiet btn-sm row-remove" type="button" data-remove-row>Remove</button>
+                    </div>
+                </fieldset>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="editor-section">
+            <div class="section-head-row">
+                <h2>Skills</h2>
+                <button class="btn btn-quiet btn-sm" type="button" data-add-row="skill">Add skill group</button>
+            </div>
+            <div data-rows="skill">
+                {% for item in grouped.skill %}
+                <fieldset class="editor-row">
+                    <legend>Skill group {{ loop.index }}</legend>
+                    <div class="form-grid">
+                        <div class="field-inline"><label>Group</label><input class="input" name="skill_category" maxlength="60" value="{{ item.subtitle }}" placeholder="Languages"></div>
+                        <div class="field-inline field-full"><label>Skills (comma separated)</label><input class="input" name="skill_items" maxlength="400" value="{{ item.title }}" placeholder="Python, Java, SQL"></div>
+                    </div>
+                    <div class="row-tools">
+                        <button class="btn btn-quiet btn-sm" type="button" data-move="up">Move up</button>
+                        <button class="btn btn-quiet btn-sm" type="button" data-move="down">Move down</button>
+                        <button class="btn btn-quiet btn-sm row-remove" type="button" data-remove-row>Remove</button>
+                    </div>
+                </fieldset>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="editor-section">
+            <div class="section-head-row">
+                <h2>Projects</h2>
+                <button class="btn btn-quiet btn-sm" type="button" data-add-row="project">Add project</button>
+            </div>
+            <div data-rows="project">
+                {% for item in grouped.project %}
+                <fieldset class="editor-row">
+                    <legend>Project {{ loop.index }}</legend>
+                    <div class="form-grid">
+                        <div class="field-inline"><label>Title</label><input class="input" name="proj_title" maxlength="120" value="{{ item.title }}"></div>
+                        <div class="field-inline"><label>Technologies</label><input class="input" name="proj_tech" maxlength="160" value="{{ item.meta.split(' | ')[0] if item.meta else '' }}"></div>
+                        <div class="field-inline"><label>Duration</label><input class="input" name="proj_duration" maxlength="60" value="{{ item.meta.split(' | ')[1] if item.meta and ' | ' in item.meta else '' }}" placeholder="Jan – Mar 2026"></div>
+                        <div class="field-inline field-full"><label>Description</label><textarea class="input textarea" name="proj_description" rows="2" maxlength="1200">{{ item.detail }}</textarea></div>
+                        <div class="field-inline field-full"><label>What you personally built</label><textarea class="input textarea" name="proj_contributions" rows="2" maxlength="800">{{ item.extra }}</textarea></div>
+                        <div class="field-inline"><label>GitHub link</label><input class="input" name="proj_github" maxlength="300" value="{{ item.link }}"></div>
+                        <div class="field-inline"><label>Live demo link</label><input class="input" name="proj_live" maxlength="300" value="{{ item.link2 }}"></div>
+                    </div>
+                    <input type="hidden" name="proj_source_id" value="{{ item.source_id or '' }}">
+                    <div class="row-tools">
+                        <button class="btn btn-quiet btn-sm" type="button" data-move="up">Move up</button>
+                        <button class="btn btn-quiet btn-sm" type="button" data-move="down">Move down</button>
+                        <button class="btn btn-quiet btn-sm row-remove" type="button" data-remove-row>Remove</button>
+                    </div>
+                </fieldset>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="editor-section">
+            <div class="section-head-row">
+                <h2>Internship and work experience <span class="muted">(optional)</span></h2>
+                <button class="btn btn-quiet btn-sm" type="button" data-add-row="experience">Add experience</button>
+            </div>
+            <div data-rows="experience">
+                {% for item in grouped.experience %}
+                <fieldset class="editor-row">
+                    <legend>Experience {{ loop.index }}</legend>
+                    <div class="form-grid">
+                        <div class="field-inline"><label>Organisation</label><input class="input" name="exp_org" maxlength="120" value="{{ item.subtitle }}"></div>
+                        <div class="field-inline"><label>Job title</label><input class="input" name="exp_role" maxlength="120" value="{{ item.title }}"></div>
+                        <div class="field-inline"><label>Employment type</label><input class="input" name="exp_type" maxlength="40" value="{{ item.meta.split(' | ')[0] if item.meta else '' }}" placeholder="Internship"></div>
+                        <div class="field-inline"><label>Start date</label><input class="input" name="exp_start" maxlength="20" value="{{ item.meta.split(' | ')[1].split(' - ')[0] if item.meta and ' | ' in item.meta and ' - ' in item.meta.split(' | ')[1] else '' }}"></div>
+                        <div class="field-inline"><label>End date</label><input class="input" name="exp_end" maxlength="20" value="{{ item.meta.split(' | ')[1].split(' - ')[1] if item.meta and ' | ' in item.meta and ' - ' in item.meta.split(' | ')[1] else '' }}"></div>
+                        <div class="field-inline"><label>Technologies used</label><input class="input" name="exp_tech" maxlength="200" value=""></div>
+                        <div class="field-inline field-full"><label>Responsibilities</label><textarea class="input textarea" name="exp_responsibilities" rows="2" maxlength="1200">{{ item.detail }}</textarea></div>
+                        <div class="field-inline field-full"><label>Achievements</label><textarea class="input textarea" name="exp_achievements" rows="2" maxlength="800">{{ item.extra }}</textarea></div>
+                    </div>
+                    <div class="row-tools">
+                        <button class="btn btn-quiet btn-sm" type="button" data-move="up">Move up</button>
+                        <button class="btn btn-quiet btn-sm" type="button" data-move="down">Move down</button>
+                        <button class="btn btn-quiet btn-sm row-remove" type="button" data-remove-row>Remove</button>
+                    </div>
+                </fieldset>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="editor-section">
+            <div class="section-head-row">
+                <h2>Certifications</h2>
+                <a class="btn btn-quiet btn-sm" href="{{ url_for('certificates.vault') }}">Open vault</a>
+            </div>
+
+            {% if certificates %}
+            <p class="field-hint">Select from the {{ certificates|length }} certificate(s) stored in your vault. Only the details are copied — the file itself is never attached.</p>
+            <ul class="cert-picker">
+                {% for certificate in certificates %}
+                <li>
+                    <label class="cert-choice">
+                        <input type="checkbox" name="certificate_ids" value="{{ certificate.id }}"
+                               {% if certificate.id in selected_certificates %}checked{% endif %}>
+                        <span>
+                            <strong>{{ certificate.title }}</strong>
+                            <span class="muted">{{ certificate.organization or 'Organisation not recorded' }}{% if certificate.issue_date %} · {{ certificate.issue_date }}{% endif %}</span>
+                        </span>
+                    </label>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="field-hint">Your vault is empty. <a class="text-link" href="{{ url_for('certificates.upload_certificate') }}">Upload a certificate</a> to select it here, or type one below.</p>
+            {% endif %}
+
+            <div data-rows="certification">
+                {% for item in grouped.certification if not item.source_id %}
+                <fieldset class="editor-row">
+                    <legend>Certification {{ loop.index }}</legend>
+                    <div class="form-grid">
+                        <div class="field-inline"><label>Certificate name</label><input class="input" name="cert_name" maxlength="140" value="{{ item.title }}"></div>
+                        <div class="field-inline"><label>Issuing organisation</label><input class="input" name="cert_org" maxlength="120" value="{{ item.subtitle }}"></div>
+                        <div class="field-inline"><label>Issue date</label><input class="input" name="cert_date" maxlength="20" value="{{ item.meta.split(' | ')[0] if item.meta else '' }}" placeholder="2026-05-01"></div>
+                        <div class="field-inline"><label>Credential ID</label><input class="input" name="cert_id" maxlength="80" value="{{ item.meta.split('Credential ID ')[1] if 'Credential ID ' in item.meta else '' }}"></div>
+                        <div class="field-inline field-full"><label>Credential URL</label><input class="input" name="cert_url" maxlength="300" value="{{ item.link }}" placeholder="https://"></div>
+                    </div>
+                    <div class="row-tools">
+                        <button class="btn btn-quiet btn-sm row-remove" type="button" data-remove-row>Remove</button>
+                    </div>
+                </fieldset>
+                {% endfor %}
+            </div>
+            <button class="btn btn-quiet btn-sm" type="button" data-add-row="certification">Add a certificate by hand</button>
+        </section>
+
+        <section class="editor-section">
+            <div class="section-head-row">
+                <h2>Extra sections <span class="muted">(optional)</span></h2>
+                <button class="btn btn-quiet btn-sm" type="button" data-add-row="section">Add section</button>
+            </div>
+            <p class="field-hint">Achievements, hackathons, workshops, publications, volunteering, languages or extracurricular activities.</p>
+            <div data-rows="section">
+                {% for item in grouped.section %}
+                <fieldset class="editor-row">
+                    <legend>Section {{ loop.index }}</legend>
+                    <div class="form-grid">
+                        <div class="field-inline field-full"><label>Heading</label><input class="input" name="section_title" maxlength="80" value="{{ item.title }}" placeholder="Hackathons"></div>
+                        <div class="field-inline field-full"><label>Lines</label><textarea class="input textarea" name="section_body" rows="2" maxlength="1200">{{ item.detail }}</textarea></div>
+                    </div>
+                    <div class="row-tools">
+                        <button class="btn btn-quiet btn-sm" type="button" data-move="up">Move up</button>
+                        <button class="btn btn-quiet btn-sm" type="button" data-move="down">Move down</button>
+                        <button class="btn btn-quiet btn-sm row-remove" type="button" data-remove-row>Remove</button>
+                    </div>
+                </fieldset>
+                {% endfor %}
+            </div>
+        </section>
+
+        <div class="editor-save">
+            <button class="btn btn-primary btn-lg" type="submit">{% if resume.id %}Save resume{% else %}Create resume{% endif %}</button>
+            <span class="muted">Saving keeps this version; you can duplicate it for another role.</span>
+        </div>
+    </form>
+
+    <aside class="preview-column">
+        <div class="preview-head">
+            <h2>Live preview</h2>
+            <span class="muted">Updates as you type</span>
+        </div>
+        <div class="preview-scroll" id="resume-preview" data-preview-url="{{ url_for('resumes.preview_resume') }}">
+            {% include "career_studio/_resume_preview.html" %}
+            <p class="preview-loading" hidden>Updating preview…</p>
+        </div>
+    </aside>
+</div>
+
+{# Reusable row templates: cloning one of these adds a blank entry. #}
+<template id="row-education">
+    <fieldset class="editor-row">
+        <legend>New education</legend>
+        <div class="form-grid">
+            <div class="field-inline"><label>Institution</label><input class="input" name="edu_institution" maxlength="120"></div>
+            <div class="field-inline"><label>Degree</label><input class="input" name="edu_degree" maxlength="120"></div>
+            <div class="field-inline"><label>Course or specialisation</label><input class="input" name="edu_field" maxlength="80"></div>
+            <div class="field-inline"><label>Start year</label><input class="input" name="edu_start" maxlength="10"></div>
+            <div class="field-inline"><label>Graduation year</label><input class="input" name="edu_end" maxlength="10"></div>
+            <div class="field-inline"><label>CGPA or percentage</label><input class="input" name="edu_grade" maxlength="40"></div>
+            <div class="field-inline field-full"><label>Relevant coursework</label><input class="input" name="edu_coursework" maxlength="400"></div>
+        </div>
+        <div class="row-tools">
+            <button class="btn btn-quiet btn-sm" type="button" data-move="up">Move up</button>
+            <button class="btn btn-quiet btn-sm" type="button" data-move="down">Move down</button>
+            <button class="btn btn-quiet btn-sm row-remove" type="button" data-remove-row>Remove</button>
+        </div>
+    </fieldset>
+</template>
+<template id="row-skill">
+    <fieldset class="editor-row">
+        <legend>New skill group</legend>
+        <div class="form-grid">
+            <div class="field-inline"><label>Group</label><input class="input" name="skill_category" maxlength="60" placeholder="Languages"></div>
+            <div class="field-inline field-full"><label>Skills (comma separated)</label><input class="input" name="skill_items" maxlength="400"></div>
+        </div>
+        <div class="row-tools">
+            <button class="btn btn-quiet btn-sm" type="button" data-move="up">Move up</button>
+            <button class="btn btn-quiet btn-sm" type="button" data-move="down">Move down</button>
+            <button class="btn btn-quiet btn-sm row-remove" type="button" data-remove-row>Remove</button>
+        </div>
+    </fieldset>
+</template>
+<template id="row-project">
+    <fieldset class="editor-row">
+        <legend>New project</legend>
+        <div class="form-grid">
+            <div class="field-inline"><label>Title</label><input class="input" name="proj_title" maxlength="120"></div>
+            <div class="field-inline"><label>Technologies</label><input class="input" name="proj_tech" maxlength="160"></div>
+            <div class="field-inline"><label>Duration</label><input class="input" name="proj_duration" maxlength="60"></div>
+            <div class="field-inline field-full"><label>Description</label><textarea class="input textarea" name="proj_description" rows="2" maxlength="1200"></textarea></div>
+            <div class="field-inline field-full"><label>What you personally built</label><textarea class="input textarea" name="proj_contributions" rows="2" maxlength="800"></textarea></div>
+            <div class="field-inline"><label>GitHub link</label><input class="input" name="proj_github" maxlength="300"></div>
+            <div class="field-inline"><label>Live demo link</label><input class="input" name="proj_live" maxlength="300"></div>
+        </div>
+        <input type="hidden" name="proj_source_id" value="">
+        <div class="row-tools">
+            <button class="btn btn-quiet btn-sm" type="button" data-move="up">Move up</button>
+            <button class="btn btn-quiet btn-sm" type="button" data-move="down">Move down</button>
+            <button class="btn btn-quiet btn-sm row-remove" type="button" data-remove-row>Remove</button>
+        </div>
+    </fieldset>
+</template>
+<template id="row-experience">
+    <fieldset class="editor-row">
+        <legend>New experience</legend>
+        <div class="form-grid">
+            <div class="field-inline"><label>Organisation</label><input class="input" name="exp_org" maxlength="120"></div>
+            <div class="field-inline"><label>Job title</label><input class="input" name="exp_role" maxlength="120"></div>
+            <div class="field-inline"><label>Employment type</label><input class="input" name="exp_type" maxlength="40"></div>
+            <div class="field-inline"><label>Start date</label><input class="input" name="exp_start" maxlength="20"></div>
+            <div class="field-inline"><label>End date</label><input class="input" name="exp_end" maxlength="20"></div>
+            <div class="field-inline"><label>Technologies used</label><input class="input" name="exp_tech" maxlength="200"></div>
+            <div class="field-inline field-full"><label>Responsibilities</label><textarea class="input textarea" name="exp_responsibilities" rows="2" maxlength="1200"></textarea></div>
+            <div class="field-inline field-full"><label>Achievements</label><textarea class="input textarea" name="exp_achievements" rows="2" maxlength="800"></textarea></div>
+        </div>
+        <div class="row-tools">
+            <button class="btn btn-quiet btn-sm" type="button" data-move="up">Move up</button>
+            <button class="btn btn-quiet btn-sm" type="button" data-move="down">Move down</button>
+            <button class="btn btn-quiet btn-sm row-remove" type="button" data-remove-row>Remove</button>
+        </div>
+    </fieldset>
+</template>
+<template id="row-certification">
+    <fieldset class="editor-row">
+        <legend>New certification</legend>
+        <div class="form-grid">
+            <div class="field-inline"><label>Certificate name</label><input class="input" name="cert_name" maxlength="140"></div>
+            <div class="field-inline"><label>Issuing organisation</label><input class="input" name="cert_org" maxlength="120"></div>
+            <div class="field-inline"><label>Issue date</label><input class="input" name="cert_date" maxlength="20"></div>
+            <div class="field-inline"><label>Credential ID</label><input class="input" name="cert_id" maxlength="80"></div>
+            <div class="field-inline field-full"><label>Credential URL</label><input class="input" name="cert_url" maxlength="300"></div>
+        </div>
+        <div class="row-tools">
+            <button class="btn btn-quiet btn-sm row-remove" type="button" data-remove-row>Remove</button>
+        </div>
+    </fieldset>
+</template>
+<template id="row-section">
+    <fieldset class="editor-row">
+        <legend>New section</legend>
+        <div class="form-grid">
+            <div class="field-inline field-full"><label>Heading</label><input class="input" name="section_title" maxlength="80"></div>
+            <div class="field-inline field-full"><label>Lines</label><textarea class="input textarea" name="section_body" rows="2" maxlength="1200"></textarea></div>
+        </div>
+        <div class="row-tools">
+            <button class="btn btn-quiet btn-sm" type="button" data-move="up">Move up</button>
+            <button class="btn btn-quiet btn-sm" type="button" data-move="down">Move down</button>
+            <button class="btn btn-quiet btn-sm row-remove" type="button" data-remove-row>Remove</button>
+        </div>
+    </fieldset>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/resume_editor.js') }}" defer></script>
+{% endblock %}

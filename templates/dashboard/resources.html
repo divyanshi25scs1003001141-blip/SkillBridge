@@ -1,0 +1,193 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Learning Resources | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Keep learning</p>
+    <h1>Learning resources</h1>
+    <p>Free, public resources for the skills your career needs. Save the ones you want to come back to.</p>
+</div>
+
+<div class="stat-grid">
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Matching now</p>
+            <span class="stat-icon">{{ icon("search", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ resources|length }}</p>
+        <p class="stat-note">of {{ total }} resources in the catalogue</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Saved</p>
+            <span class="stat-icon stat-icon--mint">{{ icon("check", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ favourite_count }}</p>
+        <p class="stat-note">Private to your account</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Completed</p>
+            <span class="stat-icon stat-icon--cyan">{{ icon("book", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ completed_count }}</p>
+        <p class="stat-note">Marked finished by you</p>
+    </article>
+</div>
+
+<section class="panel module-panel">
+    <div class="panel-head">
+        <div>
+            <h2>Find a resource</h2>
+            <p>{{ resources|length }} of {{ total }} resources match · {{ favourite_count }} saved · {{ completed_count }} completed</p>
+        </div>
+    </div>
+    <form method="get" action="{{ url_for('resources.list_resources') }}#catalogue" class="filter-bar">
+        <div class="field-inline">
+            <label for="q">Search</label>
+            <input id="q" name="q" type="search" value="{{ filters.q }}" placeholder="Python, SQL, security..." maxlength="100">
+        </div>
+        <div class="field-inline">
+            <label for="category">Skill category</label>
+            <select id="category" name="category">
+                <option value="">All categories</option>
+                {% for category in categories %}
+                <option value="{{ category }}" {% if category == filters.category %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field-inline">
+            <label for="difficulty">Difficulty</label>
+            <select id="difficulty" name="difficulty">
+                <option value="">Any difficulty</option>
+                {% for level in difficulties %}
+                <option value="{{ level }}" {% if level == filters.difficulty %}selected{% endif %}>{{ level }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field-inline">
+            <label for="resource_type">Type</label>
+            <select id="resource_type" name="resource_type">
+                <option value="">Any type</option>
+                {% for row in type_counts %}
+                <option value="{{ row.resource_type }}" {% if row.resource_type == filters.resource_type %}selected{% endif %}>{{ row.resource_type }} ({{ row.count }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field-inline">
+            <label for="saved">Show</label>
+            <select id="saved" name="saved">
+                <option value="">All resources</option>
+                <option value="1" {% if filters.saved == "1" %}selected{% endif %}>My favourites</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button class="btn btn-primary btn-sm" type="submit">Apply filters</button>
+            <a class="btn btn-quiet btn-sm" href="{{ url_for('resources.list_resources') }}">Clear</a>
+        </div>
+    </form>
+
+    {% if active_filters %}
+    <p class="active-filters">
+        Showing only:
+        {% for item in active_filters %}<span class="filter-tag">{{ item }}</span>{% endfor %}
+        <a class="filter-clear" href="{{ url_for('resources.list_resources') }}">Clear all filters</a>
+    </p>
+    {% endif %}
+</section>
+
+<section class="panel module-panel" id="catalogue">
+    <div class="panel-head">
+        <div>
+            <h2>{% if filters.saved == "1" %}My saved resources{% else %}Resource catalogue{% endif %}</h2>
+            <p>Links open a real, free, public website in a new tab.</p>
+        </div>
+        {% if favourite_count %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('resources.list_resources', saved=1) }}">My favourites ({{ favourite_count }})</a>
+        {% endif %}
+    </div>
+
+    {% if filters.saved == "1" %}
+    <div class="saved-callout">
+        <p><strong>You are viewing only your saved resources</strong> — {{ resources|length }} of {{ total }}.
+            All {{ total }} documentation, tutorial, course and video resources are still here.</p>
+        <a class="btn btn-primary btn-sm" href="{{ url_for('resources.list_resources') }}">Browse all {{ total }} resources</a>
+    </div>
+    {% endif %}
+
+    <div class="type-chips">
+        <a class="type-chip {% if not filters.resource_type %}is-active{% endif %}" href="{{ url_for('resources.list_resources') }}">All types ({{ total }})</a>
+        {% for row in type_counts %}
+        <a class="type-chip {% if row.resource_type == filters.resource_type %}is-active{% endif %}" href="{{ url_for('resources.list_resources', resource_type=row.resource_type) }}">{{ row.resource_type }} ({{ row.count }})</a>
+        {% endfor %}
+    </div>
+
+    {% if resources %}
+    <div class="card-grid">
+        {% for resource in resources %}
+        <article class="panel module-card resource-tile">
+            <div class="module-card-top">
+                <span class="badge badge-neutral">{{ resource.category }}</span>
+                {% if resource.is_completed %}<span class="badge badge-done">✓ Completed</span>{% endif %}
+            </div>
+            <h2><a href="{{ resource.url }}" target="_blank" rel="noopener noreferrer">{{ resource.title }}</a></h2>
+            <p class="sb-soft">{{ resource.description }}</p>
+            <div class="resource-meta">
+                <span class="badge">{{ resource.difficulty }}</span>
+                <span class="badge badge-cyan">{{ resource.resource_type }}</span>
+            </div>
+            {% if resource.note %}
+            <p class="saved-note">{{ resource.note }}</p>
+            {% endif %}
+            <div class="resource-foot">
+                <form method="post" action="{{ url_for('resources.toggle_favourite', resource_id=resource.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="q" value="{{ filters.q }}">
+                    <input type="hidden" name="category" value="{{ filters.category }}">
+                    <input type="hidden" name="difficulty" value="{{ filters.difficulty }}">
+                    <input type="hidden" name="resource_type" value="{{ filters.resource_type }}">
+                    <input type="hidden" name="saved" value="{{ filters.saved }}">
+                    {% if resource.is_favourite %}
+                    <button class="btn btn-outline btn-sm" type="submit">{{ icon("check", 16) }} Saved — remove</button>
+                    {% else %}
+                    <button class="btn btn-primary btn-sm" type="submit">Save to favourites</button>
+                    {% endif %}
+                </form>
+            </div>
+
+            <form method="post" action="{{ url_for('resources.save_note', resource_id=resource.id) }}" class="resource-note">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="q" value="{{ filters.q }}">
+                <input type="hidden" name="category" value="{{ filters.category }}">
+                <input type="hidden" name="difficulty" value="{{ filters.difficulty }}">
+                <input type="hidden" name="resource_type" value="{{ filters.resource_type }}">
+                <input type="hidden" name="saved" value="{{ filters.saved }}">
+                <label for="note-{{ resource.id }}">{% if resource.note %}Your note{% else %}Add a note{% endif %}</label>
+                <textarea id="note-{{ resource.id }}" name="note" rows="2" maxlength="{{ note_max_length }}" placeholder="What did you learn? Anything to revisit?">{{ resource.note }}</textarea>
+                <div class="note-actions">
+                    <label class="note-check">
+                        <input type="checkbox" name="is_completed" value="1" {% if resource.is_completed %}checked{% endif %}>
+                        Completed
+                    </label>
+                    <button class="btn btn-outline btn-sm" type="submit">Save note</button>
+                </div>
+            </form>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <span class="empty-icon">{{ icon("search", 22) }}</span>
+        <div>
+            <h3>No resources match those filters</h3>
+            <p>Try another keyword, or clear the filters to see the whole catalogue.</p>
+            <p><a class="btn btn-outline btn-sm" href="{{ url_for('resources.list_resources') }}">Show all resources</a></p>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<p class="gap-note">Your favourites are private to your account, and removing one never deletes the resource itself.</p>
+{% endblock %}

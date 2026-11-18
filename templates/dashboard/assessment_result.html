@@ -1,0 +1,79 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Assessment Result | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Assessment complete</p>
+    <h1>Your {{ assessment.title }} result</h1>
+    <p>Use this result to decide what to practise next. It is a learning check, not a hiring prediction.</p>
+</div>
+
+{% set circumference = (2 * 3.14159 * 52)|round(1) %}
+<section class="panel result-hero">
+    <div class="result-ring {% if percentage < 50 %}is-low{% elif percentage < 80 %}is-partial{% endif %}"
+         role="img" aria-label="{{ percentage|round|int }} percent">
+        <svg viewBox="0 0 120 120" width="158" height="158" aria-hidden="true" focusable="false">
+            <circle class="result-ring-track" cx="60" cy="60" r="52"></circle>
+            <circle class="result-ring-fill" cx="60" cy="60" r="52"
+                    stroke-dasharray="{{ circumference }}"
+                    stroke-dashoffset="{{ (circumference * (1 - percentage / 100))|round(1) }}"></circle>
+        </svg>
+        <strong>{{ percentage|round|int }}%</strong>
+    </div>
+
+    <div class="result-copy">
+        <p class="sb-eyebrow">Score</p>
+        <h2>{% if percentage >= 80 %}Strong work!{% elif percentage >= 50 %}Good start — keep practising.{% else %}A useful starting point.{% endif %}</h2>
+        <p class="result-fraction">{{ score }} correct out of {{ total }}</p>
+        <p class="sb-muted">Your answers and score have been saved in your assessment history.</p>
+        {% if weak_topics %}
+        <div class="result-topics">
+            <p class="result-topics-label">Topics to revisit</p>
+            <ul class="chips chips-warn chips-small">
+                {% for topic in weak_topics %}<li>{{ topic }}</li>{% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="panel review-panel" aria-labelledby="review-heading">
+    <div class="panel-head">
+        <div>
+            <h2 id="review-heading">Answer review</h2>
+            <p>Every question, the answer you chose and the correct one.</p>
+        </div>
+        <span class="badge {% if score == total %}badge-mint{% endif %}">{{ score }} / {{ total }} correct</span>
+    </div>
+
+    <ol class="review-list">
+        {% for item in review %}
+        <li class="review-row {% if item.correct %}is-correct{% else %}is-wrong{% endif %}">
+            <div class="review-head">
+                <span class="review-index" aria-hidden="true">{{ loop.index }}</span>
+                <h3>{{ item.question.question_text }}</h3>
+                <span class="badge {% if item.correct %}badge-mint{% else %}badge-danger{% endif %}">{% if item.correct %}Correct{% else %}Review{% endif %}</span>
+            </div>
+            <dl class="review-answers">
+                <div>
+                    <dt>Your answer</dt>
+                    <dd>{% if item.chosen %}{{ item.chosen }} — {{ item.question['option_' ~ item.chosen|lower] }}{% else %}Not answered{% endif %}</dd>
+                </div>
+                <div>
+                    <dt>Correct answer</dt>
+                    <dd>{{ item.question.correct_option }} — {{ item.question['option_' ~ item.question.correct_option|lower] }}</dd>
+                </div>
+            </dl>
+            <p class="review-why">{{ item.question.explanation }}</p>
+        </li>
+        {% endfor %}
+    </ol>
+</section>
+
+<div class="result-actions">
+    <a class="btn btn-primary" href="{{ url_for('skills.assessment_list') }}">{{ icon("target", 16) }} Try another assessment</a>
+    <a class="btn btn-outline" href="{{ url_for('skills.assessment_history') }}">{{ icon("chart", 16) }} View history</a>
+</div>
+{% endblock %}

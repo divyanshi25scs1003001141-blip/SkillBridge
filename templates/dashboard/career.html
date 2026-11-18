@@ -1,0 +1,74 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Career Goal | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Your target career</p>
+    <h1>Choose a career path</h1>
+    <p>Pick the career you are working towards. SkillBridge compares the skills it needs with the skills in your own list.</p>
+</div>
+
+{% if selected and gap %}
+{% set circumference = 389.56 %}
+<section class="panel gap-hero">
+    <div class="gap-ring">
+        <svg viewBox="0 0 150 150" role="img" aria-label="{{ gap.percentage }} percent of {{ selected.title }} skills covered">
+            <circle class="gap-ring-track" cx="75" cy="75" r="62"></circle>
+            <circle class="gap-ring-fill" cx="75" cy="75" r="62"
+                    stroke-dasharray="{{ circumference }}"
+                    stroke-dashoffset="{{ circumference - (circumference * gap.percentage / 100) }}"></circle>
+        </svg>
+        <div class="gap-ring-label">
+            <strong>{{ gap.percentage }}%</strong>
+            <span>covered</span>
+        </div>
+    </div>
+    <div class="gap-hero-copy">
+        <h2>Your selected career</h2>
+        <p class="sb-soft">{{ selected.title }} · {{ gap.required_count }} required skills, {{ gap.core_count }} of them core</p>
+        <p class="gap-counts">{{ gap.counts["Acquired"] }} acquired · {{ gap.counts["Learning"] }} learning · {{ gap.counts["Missing"] }} not started</p>
+        <p class="gap-note">{{ selected.description }}</p>
+        <div class="page-actions page-actions--tight">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('career.skill_gap') }}">View skill gap</a>
+            <a class="btn btn-primary btn-sm" href="{{ url_for('roadmap.view_roadmap') }}">Open roadmap</a>
+        </div>
+    </div>
+</section>
+{% else %}
+<div class="empty-state empty-state--inline">
+    <span class="empty-icon">{{ icon("route", 22) }}</span>
+    <div>
+        <h3>No career path chosen yet</h3>
+        <p>Pick one below to see your skill gap.</p>
+    </div>
+</div>
+{% endif %}
+
+<div class="card-grid">
+    {% for career in careers %}
+    <article class="panel module-card">
+        <div class="module-card-top">
+            <span class="badge badge-neutral">{{ career.skill_count }} skills · {{ career.core_count }} core</span>
+            {% if selected and selected.id == career.id %}<span class="badge badge-done">{{ icon("check", 14) }} Current</span>{% endif %}
+        </div>
+        <h2>{{ career.title }}</h2>
+        <p class="sb-soft">{{ career.description }}</p>
+        <form method="post" class="module-card-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="career_id" value="{{ career.id }}">
+            {% if selected and selected.id == career.id %}
+            <button class="btn btn-outline" type="submit">{{ icon("check", 16) }} Your current career</button>
+            {% else %}
+            <button class="btn btn-primary" type="submit">Choose this career</button>
+            {% endif %}
+        </form>
+    </article>
+    {% else %}
+    <p class="sb-muted">No career paths are available yet.</p>
+    {% endfor %}
+</div>
+
+<p class="gap-note">Your choice is saved privately to your account. Changing it keeps all of your skills and assessment results.</p>
+{% endblock %}

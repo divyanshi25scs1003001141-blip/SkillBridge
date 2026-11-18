@@ -1,0 +1,95 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}{{ certificate.title }} | Certificate Vault | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">CERTIFICATE VAULT</p>
+    <h1>{{ certificate.title }}</h1>
+    <p>{{ certificate.organization or 'Issuing organisation not recorded' }} · {{ certificate.category }}</p>
+    <div class="page-actions page-actions--tight">
+        <a class="btn btn-primary" href="{{ url_for('certificates.download_file', certificate_id=certificate.id) }}">Download file</a>
+        <a class="btn btn-outline" href="{{ url_for('certificates.edit_certificate', certificate_id=certificate.id) }}">Edit details</a>
+        <a class="btn btn-quiet" href="{{ url_for('certificates.vault') }}">Back to vault</a>
+    </div>
+</div>
+
+{% if certificate.expiry_state == 'expired' %}
+<div class="alert alert-warning" role="alert"><span>This certificate expired on {{ certificate.expiry_date }}. Renew it if the course or badge is still relevant.</span></div>
+{% elif certificate.expiry_state == 'soon' %}
+<div class="alert alert-info" role="alert"><span>This certificate expires on {{ certificate.expiry_date }} ({{ certificate.days_to_expiry }} days left).</span></div>
+{% endif %}
+
+<div class="cert-detail">
+    <section class="panel cert-preview-panel">
+        <div class="panel-head">
+            <div>
+                <h2>Document</h2>
+                <p class="sb-soft">{{ certificate.original_filename }} · {{ (certificate.file_size / 1024)|round(1) }} KB</p>
+            </div>
+        </div>
+        {% if certificate.is_image %}
+        <img class="cert-preview-image" src="{{ url_for('certificates.preview_file', certificate_id=certificate.id) }}" alt="Certificate {{ certificate.title }}">
+        {% elif certificate.mime_type == 'application/pdf' %}
+        <object class="cert-preview-frame" data="{{ url_for('certificates.preview_file', certificate_id=certificate.id) }}" type="application/pdf">
+            <p class="sb-soft">Your browser cannot show PDFs inline.
+                <a class="text-link" href="{{ url_for('certificates.download_file', certificate_id=certificate.id) }}">Download the file</a> instead.</p>
+        </object>
+        {% else %}
+        <p class="sb-soft">This file type cannot be previewed here. Use the download button.</p>
+        {% endif %}
+    </section>
+
+    <section class="panel">
+        <div class="panel-head"><div><h2>Credential details</h2></div></div>
+        <dl class="details">
+            <dt>Category</dt>
+            <dd><span class="badge">{{ certificate.category }}</span></dd>
+
+            <dt>Issued by</dt>
+            <dd>{{ certificate.organization or 'Not recorded' }}</dd>
+
+            <dt>Issue date</dt>
+            <dd>{{ certificate.issue_date or 'Not recorded' }}</dd>
+
+            <dt>Expiry date</dt>
+            <dd>{{ certificate.expiry_date or 'No expiry recorded' }}</dd>
+
+            <dt>Credential ID</dt>
+            <dd>{{ certificate.credential_id or 'Not recorded' }}</dd>
+
+            <dt>Verification</dt>
+            <dd>
+                {{ certificate.verified_note }}
+                {% if certificate.credential_url %}
+                · <a class="text-link" href="{{ certificate.credential_url }}" target="_blank" rel="noopener noreferrer nofollow">open verification link</a>
+                {% endif %}
+                <span class="readiness-detail">SkillBridge does not independently verify uploaded certificates.</span>
+            </dd>
+
+            <dt>Uploaded</dt>
+            <dd>{{ certificate.uploaded_at[:16] }}</dd>
+
+            {% if certificate.skills_list %}
+            <dt>Skills covered</dt>
+            <dd>
+                <ul class="chips chips-small">
+                    {% for skill in certificate.skills_list %}<li>{{ skill }}</li>{% endfor %}
+                </ul>
+            </dd>
+            {% endif %}
+
+            {% if certificate.description %}
+            <dt>Description</dt>
+            <dd>{{ certificate.description }}</dd>
+            {% endif %}
+        </dl>
+
+        <form method="post" action="{{ url_for('certificates.delete_certificate', certificate_id=certificate.id) }}" data-confirm="Delete this certificate and its stored file? This cannot be undone.">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-outline btn-sm cert-delete" type="submit">Delete certificate</button>
+        </form>
+    </section>
+</div>
+{% endblock %}

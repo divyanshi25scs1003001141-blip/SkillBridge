@@ -1,0 +1,136 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Readiness Report | SkillBridge{% endblock %}
+
+{% block content %}
+{% set circumference = 389.56 %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Where you stand</p>
+    <h1>Career readiness report</h1>
+    <p>
+        {% if report.career %}Preparing for <strong>{{ report.career.title }}</strong>.{% else %}Choose a career path to make this report specific.{% endif %}
+        Every number here is computed from your own records.
+    </p>
+</div>
+
+<section class="panel gap-hero">
+    <div class="gap-ring {% if report.overall >= 75 %}is-ready{% elif report.overall >= 50 %}is-building{% elif report.overall >= 25 %}is-starting{% else %}is-early{% endif %}">
+        <svg viewBox="0 0 150 150" role="img" aria-label="{{ report.overall }} percent career readiness">
+            <circle class="gap-ring-track" cx="75" cy="75" r="62"></circle>
+            <circle class="gap-ring-fill" cx="75" cy="75" r="62"
+                    stroke-dasharray="{{ circumference }}"
+                    stroke-dashoffset="{{ circumference - (circumference * report.overall / 100) }}"></circle>
+        </svg>
+        <div class="gap-ring-label">
+            <strong>{{ report.overall }}%</strong>
+            <span>ready</span>
+        </div>
+    </div>
+    <div class="gap-hero-copy">
+        <h2>{{ report.overall }}% ready</h2>
+        <p class="sb-soft">{{ report.band }}{% if report.career %} · {{ report.career.title }}{% endif %}</p>
+        <p class="gap-counts">
+            {{ report.counts.goals_completed }} of {{ report.counts.goals_total }} goals complete ·
+            {{ report.counts.projects_completed }} of {{ report.counts.projects_total }} projects finished ·
+            {{ report.counts.assessments_taken }} assessment(s) taken
+        </p>
+        <div class="page-actions page-actions--tight">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('career.skill_gap') }}">View skill gap</a>
+            <a class="btn btn-primary btn-sm" href="{{ url_for('roadmap.view_roadmap') }}">Open roadmap</a>
+        </div>
+    </div>
+</section>
+
+<div class="stat-grid">
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Skills acquired</p>
+            <span class="stat-icon stat-icon--mint">{{ icon("check", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ report.supporting.skills_acquired }}</p>
+        <p class="stat-note">{{ report.supporting.skills_learning }} still learning</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Resources saved</p>
+            <span class="stat-icon stat-icon--cyan">{{ icon("book", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ report.supporting.favourites }}</p>
+        <p class="stat-note">{{ report.supporting.resources_completed }} marked completed</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Projects planned</p>
+            <span class="stat-icon">{{ icon("folder", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ report.supporting.projects_planned }}</p>
+        <p class="stat-note">Not started yet</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Overdue goals</p>
+            <span class="stat-icon stat-icon--coral">{{ icon("flag", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ report.supporting.overdue_goals }}</p>
+        <p class="stat-note">Past their target date</p>
+    </article>
+</div>
+
+<section class="panel module-panel">
+    <div class="panel-head">
+        <div>
+            <h2>How the score is built</h2>
+            <p>Fixed weights applied to your real data — nothing is estimated.</p>
+        </div>
+    </div>
+    <div class="metric-list">
+        {% for component in report.components %}
+        <article class="metric-row">
+            <div class="metric-copy">
+                <h3>{{ component.label }}</h3>
+                <p>{{ component.detail }}</p>
+            </div>
+            <div class="metric-meter">
+                <div class="progress" role="img" aria-label="{{ component.label }} {{ component.score }} percent">
+                    <span class="progress-fill" style="--fill: {{ component.score }}%"></span>
+                </div>
+                <div class="metric-values">
+                    <span>{{ component.score }}%</span>
+                    <span>weight {{ component.weight }}%</span>
+                    <span class="metric-contribution">{{ "%.1f"|format(component.contribution) }}</span>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    <div class="metric-total">
+        <span>Overall</span>
+        <strong>{{ report.overall }}% · {{ report.band }}</strong>
+    </div>
+</section>
+
+{% if report.next_actions %}
+<section class="panel module-panel">
+    <div class="panel-head">
+        <div>
+            <h2>What to do next</h2>
+            <p>The smallest actions that would raise this score.</p>
+        </div>
+    </div>
+    <ul class="next-actions">
+        {% for action in report.next_actions %}
+        <li>
+            <div>
+                <strong>{{ action.title }}</strong>
+                <p class="sb-soft">{{ action.detail }}</p>
+            </div>
+            <a class="btn btn-outline btn-sm" href="{{ url_for(action.endpoint) }}">{{ action.label }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+<p class="gap-note">This report summarises your own records. It estimates preparation, not job outcomes — no score guarantees selection.</p>
+{% endblock %}

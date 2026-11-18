@@ -1,0 +1,16 @@
+{#
+  _flash.html - shows "flash messages": short notices such as "You have been logged out."
+  Included by the public layout (base.html) and the dashboard layout.
+#}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-area" role="region" aria-label="Notifications">
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}" role="alert">
+        <span>{{ message }}</span>
+        <button type="button" class="alert-close" aria-label="Dismiss message" data-dismiss-alert>&times;</button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}

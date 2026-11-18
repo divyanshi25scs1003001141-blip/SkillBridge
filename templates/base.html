@@ -1,0 +1,92 @@
+{% from "_icons.html" import icon, logo_mark -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}SkillBridge{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}SkillBridge helps college students check their skills, follow career roadmaps and track their career preparation.{% endblock %}">
+    <meta name="theme-color" content="#f7f8fc">
+    {# Applies the saved light/dark choice before the first paint. #}
+    {% include "_theme_init.html" %}
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}">
+    <link rel="preload" href="{{ url_for('static', filename='fonts/bricolage-grotesque-latin-700-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
+    {% block head %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/refresh.css') }}">
+    {# The redesign layer: design tokens first, then the component library last so it wins. #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+{# The "body" block holds the public layout. The dashboard layout replaces it. #}
+{% block body %}
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="{{ url_for('main.index') }}" aria-label="SkillBridge home">
+                <span class="brand-mark">{{ logo_mark(20) }}</span>
+                <span class="brand-name">SkillBridge</span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav" data-nav-toggle>
+                {{ icon("menu", 22) }}
+            </button>
+
+            <nav id="site-nav" class="site-nav" aria-label="Main">
+                <a href="{{ url_for('main.index') }}" {% if request.endpoint == 'main.index' %}class="active" aria-current="page"{% endif %}>Home</a>
+                <a href="{{ url_for('main.about') }}" {% if request.endpoint == 'main.about' %}class="active" aria-current="page"{% endif %}>About</a>
+                <a href="{{ url_for('main.features') }}" {% if request.endpoint == 'main.features' %}class="active" aria-current="page"{% endif %}>Features</a>
+
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard.home') }}" {% if request.endpoint == 'dashboard.home' %}class="active" aria-current="page"{% endif %}>Dashboard</a>
+                {# Logging out changes data, so it is a POST form with a CSRF token, not a plain link #}
+                <form method="post" action="{{ url_for('auth.logout') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="nav-button">Log out</button>
+                </form>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" {% if request.endpoint == 'auth.login' %}class="active" aria-current="page"{% endif %}>Log in</a>
+                <a href="{{ url_for('auth.register') }}" class="nav-cta">Create account</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        {% include "_flash.html" %}
+    </div>
+
+    <main id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <div class="footer-about">
+                <a class="brand" href="{{ url_for('main.index') }}" aria-label="SkillBridge home">
+                    <span class="brand-mark">{{ logo_mark(20) }}</span>
+                    <span class="brand-name">SkillBridge</span>
+                </a>
+                <p>A skill development and career readiness platform for college students.</p>
+            </div>
+            <nav class="footer-links" aria-label="Footer">
+                <a href="{{ url_for('main.about') }}">About</a>
+                <a href="{{ url_for('main.features') }}">Features</a>
+            </nav>
+        </div>
+        <div class="container footer-note">
+            <p>SkillBridge tracks your learning progress and career preparation. It does not predict or guarantee job selection.</p>
+            <p>&copy; {{ current_year }} SkillBridge</p>
+        </div>
+    </footer>
+{% endblock %}
+
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

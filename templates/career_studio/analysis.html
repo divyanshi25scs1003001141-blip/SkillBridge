@@ -1,0 +1,186 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Resume analysis | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">RESUME ANALYZER · RESULT</p>
+    <h1>{{ analysis.job_title or 'Resume analysis' }}{% if analysis.company %} at {{ analysis.company }}{% endif %}</h1>
+    <p>
+        Analysed {{ analysis.created_at[:16] }} · {{ analysis.source_name }} ·
+        {{ analysis.word_count }} words
+        {% if analysis.experience_level %}· {{ analysis.experience_level }}{% endif %}
+    </p>
+    <div class="page-actions page-actions--tight">
+        <a class="btn btn-primary" href="{{ url_for('analyzer.analyzer_home') }}">Analyse another</a>
+        <a class="btn btn-outline" href="{{ url_for('analyzer.analysis_history') }}">History</a>
+        <form method="post" action="{{ url_for('analyzer.delete_analysis', analysis_id=analysis.id) }}" data-confirm="Delete this analysis? The result cannot be recovered.">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-outline btn-sm cert-delete" type="submit">Delete analysis</button>
+        </form>
+    </div>
+</div>
+
+<section class="panel score-panel">
+    <div class="score-ring-wrap">
+        <svg class="score-ring" viewBox="0 0 140 140" role="img" aria-label="Estimated ATS compatibility {{ analysis.overall }} out of 100">
+            <circle class="score-ring-track" cx="70" cy="70" r="56"></circle>
+            <circle class="score-ring-fill" cx="70" cy="70" r="56"
+                    stroke-dasharray="351.86"
+                    stroke-dashoffset="{{ 351.86 - (351.86 * analysis.overall / 100) }}"></circle>
+        </svg>
+        <div class="score-ring-label">
+            <strong>{{ analysis.overall }}</strong>
+            <span>out of 100</span>
+        </div>
+    </div>
+    <div class="score-summary">
+        <h2>Estimated ATS compatibility</h2>
+        <p class="sb-soft">
+            This is computed from the document text and the job description with the fixed rules listed below.
+            It is not the score of any real applicant tracking system and it does not predict whether you will be hired.
+        </p>
+        {% if analysis.normalised %}
+        <p class="notice-inline">No job description was provided, so keyword coverage and job relevance were skipped and the score is normalised over the remaining parts.</p>
+        {% endif %}
+        <ul class="score-bars">
+            {% for key, label in [('structure','Structure'), ('skills','Skills match'), ('keywords','Keyword coverage'), ('relevance','Job relevance'), ('content','Content quality')] %}
+            {% set value = analysis.scores.get(key) %}
+            {% set maximum = analysis.score_maxima.get(key, 25) %}
+            <li>
+                <div class="score-bar-head">
+                    <span>{{ label }}</span>
+                    <span class="sb-soft">
+                        {% if value is none %}Not scored{% else %}{{ value }} / {{ maximum }}{% endif %}
+                    </span>
+                </div>
+                <div class="progress" role="img" aria-label="{{ label }} {{ value if value is not none else 0 }} of {{ maximum }}">
+                    <span class="progress-fill" style="--fill: {{ ((value or 0) * 100 / maximum)|round }}%"></span>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{% if analysis.has_job %}
+<div class="analysis-grid">
+    <section class="panel">
+        <div class="panel-head"><div><h2>Matched skills</h2><p class="sb-soft">Found in both the resume and the job description.</p></div></div>
+        {% if analysis.matched %}
+        <ul class="chips">{% for skill in analysis.matched %}<li>{{ skill }}</li>{% endfor %}</ul>
+        {% else %}
+        <p class="sb-soft">No known skills appear in both documents.</p>
+        {% endif %}
+    </section>
+
+    <section class="panel">
+        <div class="panel-head"><div><h2>Not found in the resume</h2><p class="sb-soft">Job skills missing from this document.</p></div></div>
+        {% if analysis.missing %}
+        <ul class="chips chips-warn">{% for skill in analysis.missing %}<li>{{ skill }}</li>{% endfor %}</ul>
+        <p class="gap-note">A missing word does not prove you lack the skill — if you have it, add the project or course where you used it.</p>
+        {% else %}
+        <p class="sb-soft">Every job skill we recognise already appears in the resume.</p>
+        {% endif %}
+    </section>
+</div>
+
+<section class="panel">
+    <div class="panel-head"><div><h2>Keyword coverage</h2><p class="sb-soft">Important words from the job description and whether the resume mentions them.</p></div></div>
+    <div class="keyword-columns">
+        <div>
+            <h3 class="small-head">Found ({{ analysis.keywords_found|length }})</h3>
+            {% if analysis.keywords_found %}
+            <ul class="chips chips-small">{% for word in analysis.keywords_found %}<li>{{ word }}</li>{% endfor %}</ul>
+            {% else %}<p class="sb-soft">None of the job's key words were found.</p>{% endif %}
+        </div>
+        <div>
+            <h3 class="small-head">Missing ({{ analysis.keywords_missing|length }})</h3>
+            {% if analysis.keywords_missing %}
+            <ul class="chips chips-small chips-warn">{% for word in analysis.keywords_missing %}<li>{{ word }}</li>{% endfor %}</ul>
+            <p class="gap-note">Cover these only where they are true, and in a sentence — never as a list of keywords.</p>
+            {% else %}<p class="sb-soft">No important job words are missing.</p>{% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<div class="analysis-grid">
+    <section class="panel">
+        <div class="panel-head"><div><h2>Resume structure</h2><p class="sb-soft">What the text shows a resume reader would find.</p></div></div>
+        <ul class="check-status">
+            {% for check in analysis.structure_checks %}
+            <li class="{{ 'is-pass' if check.passed else 'is-fail' }}">
+                <span class="status-dot">{{ '✓' if check.passed else '×' }}</span>
+                <div>
+                    <strong>{{ check.label }}</strong>
+                    <p class="sb-soft">{{ 'Found in the document.' if check.passed else check.hint }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head"><div><h2>Strengths</h2><p class="sb-soft">Evidence from this document only.</p></div></div>
+        {% if analysis.strengths %}
+        <ul class="plain-list">
+            {% for item in analysis.strengths %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+        {% else %}
+        <p class="sb-soft">No particular strengths were detected. Start with the contact block and one project.</p>
+        {% endif %}
+    </section>
+</div>
+
+<section class="panel">
+    <div class="panel-head"><div><h2>Areas to improve</h2><p class="sb-soft">Practical changes, based on what the analysis found.</p></div></div>
+    {% if analysis.improvements %}
+    <ul class="next-actions">
+        {% for item in analysis.improvements %}
+        <li>
+            <div>
+                <strong>{{ item.title }}</strong>
+                <p class="sb-soft">{{ item.detail }}</p>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="sb-soft">Nothing specific was flagged for this document.</p>
+    {% endif %}
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <div>
+            <h2>Improvement checklist</h2>
+            <p class="sb-soft">Tick items as you fix them. Ticks are kept in this browser only.</p>
+        </div>
+    </div>
+    <ul class="improve-checklist" data-checklist="{{ analysis.id }}">
+        {% for item in analysis.checklist %}
+        <li>
+            <label>
+                <input type="checkbox" value="{{ loop.index }}">
+                <span><strong>{{ item.title }}</strong><span class="sb-soft">{{ item.detail }}</span></span>
+            </label>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+
+{% if analysis.unsupported %}
+<section class="panel">
+    <div class="panel-head"><div><h2>Skills without an example</h2><p class="sb-soft">Listed in the skills section but not mentioned in a project, job or course.</p></div></div>
+    <ul class="chips chips-warn">{% for skill in analysis.unsupported %}<li>{{ skill }}</li>{% endfor %}</ul>
+    <p class="gap-note">If you have used them, add one line of evidence. If not, consider removing them from the resume until you have.</p>
+</section>
+{% endif %}
+
+<p class="gap-note">
+    The analysis reads only the text it can extract. Scanned images without a text layer cannot be analysed and are reported instead of guessed.
+    No document was stored: the upload was deleted right after the text was read.
+</p>
+{% endblock %}

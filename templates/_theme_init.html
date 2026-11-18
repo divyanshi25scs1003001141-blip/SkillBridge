@@ -1,0 +1,15 @@
+{#  Applies the saved light/dark choice before the first paint, so the page
+    never flashes the wrong theme. Include this in <head>, before any CSS. #}
+<script>
+    (function () {
+        try {
+            var saved = window.localStorage.getItem("sb-theme");
+            /* Light canvas is the product default; dark is opt-in via the toggle. */
+            var theme = saved === "dark" ? "dark" : "light";
+            document.documentElement.setAttribute("data-theme", theme);
+            document.documentElement.style.colorScheme = theme;
+        } catch (problem) {
+            document.documentElement.setAttribute("data-theme", "light");
+        }
+    })();
+</script>

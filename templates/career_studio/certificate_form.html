@@ -1,0 +1,105 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}{{ 'Edit certificate' if mode == 'edit' else 'Upload certificate' }} | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">CERTIFICATE VAULT</p>
+    <h1>{{ 'Edit certificate details' if mode == 'edit' else 'Upload a certificate' }}</h1>
+    <p>{{ 'Update the details of this record. The stored file stays as it is.' if mode == 'edit' else 'Add the document and the details you want to keep. Nothing is invented — only type what the certificate says.' }}</p>
+</div>
+
+{% if errors %}
+<div class="alert alert-error" role="alert">
+    <span>Please fix {{ errors|length }} field{{ '' if errors|length == 1 else 's' }} below.</span>
+</div>
+{% endif %}
+
+<section class="panel">
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('certificates.edit_certificate', certificate_id=certificate.id) if mode == 'edit' else url_for('certificates.upload_certificate') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-grid">
+            <div class="field-inline field-full">
+                <label for="title">Certificate title <span class="req">*</span></label>
+                <input class="input {% if errors.title %}has-error{% endif %}" id="title" name="title" maxlength="120" required value="{{ form.title }}">
+                {% if errors.title %}<p class="field-error">{{ errors.title }}</p>{% endif %}
+            </div>
+
+            <div class="field-inline">
+                <label for="organization">Issuing organisation</label>
+                <input class="input {% if errors.organization %}has-error{% endif %}" id="organization" name="organization" maxlength="120" value="{{ form.organization }}">
+                {% if errors.organization %}<p class="field-error">{{ errors.organization }}</p>{% endif %}
+            </div>
+
+            <div class="field-inline">
+                <label for="category">Category</label>
+                <select class="input" id="category" name="category">
+                    {% for item in categories %}
+                    <option value="{{ item }}" {% if form.category == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+                {% if errors.category %}<p class="field-error">{{ errors.category }}</p>{% endif %}
+            </div>
+
+            <div class="field-inline">
+                <label for="issue_date">Issue date</label>
+                <input class="input {% if errors.issue_date %}has-error{% endif %}" id="issue_date" name="issue_date" type="date" max="{{ today }}" value="{{ form.issue_date }}">
+                {% if errors.issue_date %}<p class="field-error">{{ errors.issue_date }}</p>{% endif %}
+            </div>
+
+            <div class="field-inline">
+                <label for="expiry_date">Expiry date <span class="sb-soft">(optional)</span></label>
+                <input class="input {% if errors.expiry_date %}has-error{% endif %}" id="expiry_date" name="expiry_date" type="date" value="{{ form.expiry_date }}">
+                {% if errors.expiry_date %}<p class="field-error">{{ errors.expiry_date }}</p>{% endif %}
+            </div>
+
+            <div class="field-inline">
+                <label for="credential_id">Credential ID <span class="sb-soft">(optional)</span></label>
+                <input class="input {% if errors.credential_id %}has-error{% endif %}" id="credential_id" name="credential_id" maxlength="80" value="{{ form.credential_id }}">
+                {% if errors.credential_id %}<p class="field-error">{{ errors.credential_id }}</p>{% endif %}
+            </div>
+
+            <div class="field-inline">
+                <label for="credential_url">Verification link <span class="sb-soft">(optional)</span></label>
+                <input class="input {% if errors.credential_url %}has-error{% endif %}" id="credential_url" name="credential_url" maxlength="500" placeholder="https://" value="{{ form.credential_url }}">
+                {% if errors.credential_url %}<p class="field-error">{{ errors.credential_url }}</p>{% endif %}
+            </div>
+
+            <div class="field-inline field-full">
+                <label for="skills">Skills covered <span class="sb-soft">(optional, comma separated)</span></label>
+                <input class="input" id="skills" name="skills" maxlength="200" value="{{ form.skills }}" placeholder="Python, Flask, SQL">
+                {% if errors.skills %}<p class="field-error">{{ errors.skills }}</p>{% endif %}
+            </div>
+
+            <div class="field-inline field-full">
+                <label for="description">Description <span class="sb-soft">(optional)</span></label>
+                <textarea class="input textarea" id="description" name="description" maxlength="500" rows="3">{{ form.description }}</textarea>
+            </div>
+
+            {% if mode == 'new' %}
+            <div class="field-inline field-full">
+                <label for="document">Certificate file <span class="req">*</span></label>
+                <input class="input {% if errors.document %}has-error{% endif %}" id="document" name="document" type="file" accept=".pdf,.png,.jpg,.jpeg" required>
+                <p class="field-hint">PDF, PNG or JPG, up to {{ max_mb }} MB. The file is checked before it is saved.</p>
+                {% if errors.document %}<p class="field-error">{{ errors.document }}</p>{% endif %}
+            </div>
+            {% else %}
+            <div class="field-inline field-full">
+                <p class="field-hint">
+                    Stored file: <strong>{{ certificate.original_filename }}</strong>
+                    ({{ (certificate.file_size / 1024)|round(1) }} KB) ·
+                    <a class="text-link" href="{{ url_for('certificates.preview_file', certificate_id=certificate.id) }}" target="_blank" rel="noopener">open file</a>
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="page-actions page-actions--tight">
+            <button class="btn btn-primary" type="submit">{{ 'Save changes' if mode == 'edit' else 'Upload to vault' }}</button>
+            <a class="btn btn-outline" href="{{ url_for('certificates.view_certificate', certificate_id=certificate.id) if mode == 'edit' else url_for('certificates.vault') }}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

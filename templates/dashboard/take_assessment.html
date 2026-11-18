@@ -1,0 +1,42 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}{{ assessment.title }} Assessment | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">Skill assessment</p>
+    <h1>{{ assessment.title }}</h1>
+    <p>{{ assessment.description }}</p>
+    <p class="assess-head-meta">
+        <span class="badge badge-neutral">{{ questions|length }} questions</span>
+        <span class="badge badge-neutral">1 point each</span>
+        <span class="badge badge-neutral">Answer every question</span>
+    </p>
+</div>
+
+<form method="post" action="{{ url_for('skills.submit_assessment', assessment_id=assessment.id) }}" class="assessment-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    {% for question in questions %}
+    <div class="q-card" role="group" aria-labelledby="question-heading-{{ question.id }}">
+        <p class="q-index">Question {{ loop.index }} / {{ questions|length }} · {{ question.topic }}</p>
+        <h3 class="q-text" id="question-heading-{{ question.id }}">{{ question.question_text }}</h3>
+        <div class="q-options">
+            {% for key, value in [('A', question.option_a), ('B', question.option_b), ('C', question.option_c), ('D', question.option_d)] %}
+            <label class="q-option">
+                <input type="radio" name="question_{{ question.id }}" value="{{ key }}" required>
+                <span class="q-key" aria-hidden="true">{{ key }}</span>
+                <span class="q-option-text">{{ value }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="assessment-submit">
+        <p class="sb-muted">Review your answers before submitting. Each question is worth one point.</p>
+        <button class="btn btn-primary btn-lg" type="submit">{{ icon("check", 18) }} Submit assessment</button>
+    </div>
+</form>
+{% endblock %}

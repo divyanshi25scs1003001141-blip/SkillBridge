@@ -1,0 +1,173 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Learning Goals | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="sb-page-head">
+    <p class="sb-eyebrow">One step at a time</p>
+    <h1>Learning goals</h1>
+    <p>Weekly goals keep you moving; monthly goals keep the direction. Set a target date, then mark it complete when it is done.</p>
+</div>
+
+<div class="stat-grid">
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Complete</p>
+            <span class="stat-icon stat-icon--mint">{{ icon("check", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ counts.completed }}</p>
+        <p class="stat-note">of {{ counts.total }} goals</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Open</p>
+            <span class="stat-icon">{{ icon("flag", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ counts.open }}</p>
+        <p class="stat-note">Still to finish</p>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Overdue</p>
+            <span class="stat-icon stat-icon--coral">{{ icon("target", 18) }}</span>
+        </div>
+        <p class="stat-value">{{ counts.overdue }}</p>
+        <p class="stat-note">Past their target date</p>
+    </article>
+</div>
+
+<section class="panel module-panel">
+    <div class="panel-head">
+        <div>
+            <h2>Add a goal</h2>
+            <p>{{ counts.completed }} of {{ counts.total }} complete · {{ counts.open }} open · {{ counts.overdue }} overdue</p>
+        </div>
+    </div>
+
+    <form method="post" action="{{ url_for('goals.create_goal') }}" class="project-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-grid">
+            <div class="field-inline field-full">
+                <label for="title">Goal</label>
+                <input id="title" name="title" type="text" maxlength="{{ max_title }}" required
+                       value="{{ form.title or '' }}" placeholder="Finish the Python functions chapter">
+            </div>
+            <div class="field-inline">
+                <label for="goal_type">Type</label>
+                <select id="goal_type" name="goal_type">
+                    {% for goal_type in goal_types %}
+                    <option value="{{ goal_type }}" {% if form.goal_type == goal_type %}selected{% endif %}>{{ goal_type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field-inline">
+                <label for="target_date">Target date</label>
+                <input id="target_date" name="target_date" type="date" required
+                       value="{{ form.target_date or '' }}">
+            </div>
+            <div class="field-inline field-full">
+                <label for="description">Notes (optional)</label>
+                <textarea id="description" name="description" rows="2" maxlength="{{ max_description }}"
+                          placeholder="How you will know it is done.">{{ form.description or '' }}</textarea>
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button class="btn btn-primary btn-sm" type="submit">Add goal</button>
+        </div>
+    </form>
+</section>
+
+<section class="panel module-panel">
+    <div class="panel-head">
+        <div>
+            <h2>Goal progress</h2>
+            <p>{{ percentage }}% of your goals are complete</p>
+        </div>
+        <a class="btn btn-outline btn-sm" href="{{ url_for('dashboard.home') }}">Back to dashboard</a>
+    </div>
+    <div class="progress progress--lg" role="img" aria-label="{{ percentage }} percent of goals complete">
+        <span class="progress-fill" style="--fill: {{ percentage }}%"></span>
+    </div>
+    <p class="gap-note">
+        {{ counts.completed }} complete · {{ counts.open }} open · {{ counts.overdue }} past their target date
+    </p>
+
+    {% if goals %}
+        {% for goal_type in goal_types %}
+            {% set items = by_type[goal_type] %}
+            <div class="project-group">
+                <h3 class="project-group-title">{{ goal_type }} goals <span class="muted">({{ items|length }} open)</span></h3>
+                {% if items %}
+                <div class="card-grid">
+                    {% for goal in items %}
+                    <article class="panel module-card goal-card">
+                        <div class="project-meta">
+                            <span class="badge">{{ goal.goal_type }}</span>
+                            {% if goal.overdue %}<span class="badge badge-overdue">Overdue</span>{% endif %}
+                        </div>
+                        <h2>{{ goal.title }}</h2>
+                        {% if goal.description %}<p class="sb-soft">{{ goal.description }}</p>{% endif %}
+                        <p class="goal-due">Target date: {{ goal.target_date|date_label }}</p>
+                        <div class="goal-actions">
+                            <form method="post" action="{{ url_for('goals.complete_goal', goal_id=goal.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-primary btn-sm" type="submit">{{ icon("check", 16) }} Mark complete</button>
+                            </form>
+                            <form method="post" action="{{ url_for('goals.delete_goal', goal_id=goal.id) }}"
+                                  data-confirm="Delete this goal? This cannot be undone.">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-quiet btn-sm" type="submit">Delete</button>
+                            </form>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="gap-note">No open {{ goal_type|lower }} goals.</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        {% if completed_goals %}
+        <div class="project-group">
+            <h3 class="project-group-title">Completed <span class="muted">({{ completed_goals|length }})</span></h3>
+            <div class="card-grid">
+                {% for goal in completed_goals %}
+                <article class="panel module-card goal-card is-done">
+                    <div class="project-meta">
+                        <span class="badge">{{ goal.goal_type }}</span>
+                        <span class="badge badge-done">✓ Completed</span>
+                    </div>
+                    <h2>{{ goal.title }}</h2>
+                    {% if goal.description %}<p class="sb-soft">{{ goal.description }}</p>{% endif %}
+                    <p class="goal-due">Target date: {{ goal.target_date|date_label }}{% if goal.completed_at %} · finished {{ goal.completed_at|time_ago }}{% endif %}</p>
+                    <div class="goal-actions">
+                        <form method="post" action="{{ url_for('goals.reopen_goal', goal_id=goal.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-outline btn-sm" type="submit">Reopen</button>
+                        </form>
+                        <form method="post" action="{{ url_for('goals.delete_goal', goal_id=goal.id) }}"
+                              data-confirm="Delete this goal? This cannot be undone.">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-quiet btn-sm" type="submit">Delete</button>
+                        </form>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+    <div class="empty-state">
+        <span class="empty-icon">{{ icon("flag", 22) }}</span>
+        <div>
+            <h3>No goals yet</h3>
+            <p>Add a weekly goal above — something small and finishable is the best start.</p>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<p class="gap-note">Goals are private to your account. Progress counts only the goals you created.</p>
+{% endblock %}

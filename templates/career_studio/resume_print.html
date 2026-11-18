@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ resume.title }} | SkillBridge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/refresh.css') }}">
+    <style>
+        body { background: #f4f0ff; }
+        .print-toolbar {
+            max-width: 210mm; margin: 1.5rem auto 0; display: flex; gap: .6rem;
+            flex-wrap: wrap; align-items: center; padding: 0 1rem;
+        }
+        .print-sheet {
+            max-width: 210mm; margin: 1rem auto 3rem; background: #fff;
+            padding: 18mm 16mm; box-shadow: 0 20px 60px -30px rgba(76, 29, 149, .4);
+        }
+        @media print {
+            @page { margin: 14mm; }
+            body { background: #fff; }
+            .print-toolbar { display: none; }
+            .print-sheet { box-shadow: none; margin: 0; padding: 0; max-width: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-toolbar">
+        <button class="btn btn-primary" type="button" onclick="window.print()">Print or save as PDF</button>
+        <a class="btn btn-outline" href="{{ url_for('resumes.edit_resume', resume_id=resume.id) }}">Back to editor</a>
+        <span class="muted">Use your browser print dialog and choose “Save as PDF” for a copy without the app design.</span>
+    </div>
+    <div class="print-sheet">
+        {% include "career_studio/_resume_preview.html" %}
+    </div>
+</body>
+</html>

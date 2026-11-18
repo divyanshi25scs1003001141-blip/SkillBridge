@@ -1,0 +1,312 @@
+{% extends "dashboard/layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Dashboard | SkillBridge{% endblock %}
+
+{% block content %}
+<section class="sb-hero dash-hero">
+    <div class="dash-hero-inner">
+        <div>
+            <p class="sb-eyebrow">{{ today_label }}</p>
+            <h1>Welcome back, {{ first_name }}.</h1>
+            <p class="dash-hero-sub">
+                {% if career_gap %}
+                {{ report.band }} · {{ career_gap.percentage }}% of the {{ career_gap.career.title }} skills covered.
+                {% else %}
+                Here is where your preparation stands today. Choose a career path to measure your readiness against it.
+                {% endif %}
+            </p>
+        </div>
+        <div class="dash-hero-actions">
+            <a class="btn btn-primary" href="{{ url_for('skills.assessment_list') }}">{{ icon("target", 18) }} Take an assessment</a>
+            <a class="btn btn-secondary" href="{{ url_for('skills.manage_skills') }}">{{ icon("clipboard", 18) }} Update skills</a>
+            {% if career_gap %}
+            <a class="btn btn-secondary" href="{{ url_for('career.skill_gap') }}">{{ icon("chart", 18) }} Skill gap</a>
+            {% else %}
+            <a class="btn btn-secondary" href="{{ url_for('career.choose_career') }}">{{ icon("route", 18) }} Choose a career</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{% if profile_incomplete %}
+<div class="dash-banner">
+    {{ icon("sparkle", 18) }}
+    <p>Add your college and year of study to finish setting up your profile.</p>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('profile.my_profile') }}">Open My Profile</a>
+</div>
+{% endif %}
+
+<section class="stat-grid" aria-label="Your progress at a glance">
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Skills added</p>
+            <span class="stat-icon">{{ icon("clipboard", 18) }}</span>
+        </div>
+        <p class="stat-value" data-stat="skills">{{ total_skills }}</p>
+        <p class="stat-note">{{ skills_acquired }} acquired · {{ skills_learning }} in progress</p>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Currently learning</p>
+            <span class="stat-icon stat-icon--cyan">{{ icon("book", 18) }}</span>
+        </div>
+        <p class="stat-value" data-stat="learning">{{ skills_learning }}</p>
+        <p class="stat-note">Marked as learning in your skill list</p>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Assessments taken</p>
+            <span class="stat-icon stat-icon--amber">{{ icon("target", 18) }}</span>
+        </div>
+        <p class="stat-value" data-stat="assessments">{{ report.counts.assessments_taken }}</p>
+        <p class="stat-note">
+            {% if report.counts.assessments_taken %}
+            Latest average {{ report.counts.assessment_average }}%
+            {% else %}
+            No scores recorded yet
+            {% endif %}
+        </p>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-top">
+            <p class="stat-label">Goals completed</p>
+            <span class="stat-icon stat-icon--mint">{{ icon("flag", 18) }}</span>
+        </div>
+        <p class="stat-value" data-stat="goals-completed">{{ goals_completed }}</p>
+        <p class="stat-note">of {{ goals_summary.total }} weekly and monthly goals · {{ goals_summary.open }} open</p>
+    </article>
+</section>
+
+<div class="dash-layout">
+    <div class="dash-col">
+        <section class="panel" aria-labelledby="coverage-heading">
+            <div class="panel-head">
+                <div>
+                    <h2 id="coverage-heading">Career skill coverage</h2>
+                    {% if career_gap %}
+                    <p>{{ career_gap.counts["Acquired"] }} of {{ career_gap.required_count }} required skills for {{ career_gap.career.title }}</p>
+                    {% else %}
+                    <p>Compared against the career path you are preparing for.</p>
+                    {% endif %}
+                </div>
+                {% if career_gap %}
+                <a class="btn btn-outline btn-sm" href="{{ url_for('career.skill_gap') }}">View skill gap</a>
+                {% endif %}
+            </div>
+            {% if skill_breakdown %}
+            <div id="chart-coverage" data-chart="donut"
+                 data-values='{{ skill_breakdown|tojson }}'
+                 data-center="{{ career_gap.required_count }}"
+                 data-caption="required"></div>
+            {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">{{ icon("route", 20) }}</span>
+                <div>
+                    <h3>No career path chosen yet</h3>
+                    <p>Pick the career you are preparing for and this chart will split its required skills into acquired, learning and not started.</p>
+                    <p><a class="dash-inline-link" href="{{ url_for('career.choose_career') }}">Choose a career path {{ icon("arrow-right", 14) }}</a></p>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="panel" aria-labelledby="scores-heading">
+            <div class="panel-head">
+                <div>
+                    <h2 id="scores-heading">Latest assessment scores</h2>
+                    <p>Your most recent result for each subject.</p>
+                </div>
+                <a class="btn btn-outline btn-sm" href="{{ url_for('skills.assessment_history') }}">History</a>
+            </div>
+            {% if score_bars %}
+            <div id="chart-scores" data-chart="bars"
+                 data-values='{{ score_bars|tojson }}'
+                 data-max="100"></div>
+            {# The same results as text, so the detail is readable without the chart. #}
+            <ul class="dash-list dash-score-list">
+                {% for result in latest_scores %}
+                <li>
+                    <span class="dash-list-title">{{ result["title"] }}</span>
+                    <span class="dash-list-meta">{{ result["score"] }} of {{ result["total_questions"] }} correct · {{ result["percentage"]|round|int }}% · {{ result["taken_at"]|time_ago }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">{{ icon("clipboard", 20) }}</span>
+                <div>
+                    <h3>No assessments taken yet</h3>
+                    <p>Your latest score for each subject will appear here once you take one.</p>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="panel" aria-labelledby="goals-progress-heading">
+            <div class="panel-head">
+                <div>
+                    <h2 id="goals-progress-heading">Learning goals</h2>
+                    {% if goals_summary.total %}
+                    <p>{{ goals_summary.completed }} of {{ goals_summary.total }} complete · {{ goals_summary.open }} open{% if goals_summary.overdue %} · {{ goals_summary.overdue }} overdue{% endif %}</p>
+                    {% else %}
+                    <p>Set a weekly or monthly goal to track your own progress.</p>
+                    {% endif %}
+                </div>
+                <a class="btn btn-outline btn-sm" href="{{ url_for('goals.list_goals') }}">Open goals</a>
+            </div>
+            {% if goals_summary.total %}
+            <div class="progress progress--lg" role="img" aria-label="{{ goals_summary.percentage }} percent of goals complete">
+                <span class="progress-fill" style="--fill: {{ goals_summary.percentage }}%"></span>
+            </div>
+            <p class="sb-muted sb-small" style="margin: 0.6rem 0 0;">{{ goals_summary.percentage }}% of your goals are complete.</p>
+            {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">{{ icon("flag", 20) }}</span>
+                <div>
+                    <h3>No goals yet</h3>
+                    <p>Weekly and monthly goals you add will be counted here.</p>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="panel" aria-labelledby="activity-heading">
+            <div class="panel-head">
+                <div>
+                    <h2 id="activity-heading">Recent activity</h2>
+                    <p>The last few things you did in SkillBridge.</p>
+                </div>
+            </div>
+            {% if activities %}
+            <ol class="timeline">
+                {% for activity in activities %}
+                <li>
+                    <span class="timeline-marker">{{ icon("check", 14) }}</span>
+                    <div class="timeline-body"><p>{{ activity["description"] }}</p></div>
+                    <time datetime="{{ activity['created_at'] }}">{{ activity["created_at"]|time_ago }}</time>
+                </li>
+                {% endfor %}
+            </ol>
+            {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">{{ icon("file", 20) }}</span>
+                <div>
+                    <h3>Nothing here yet</h3>
+                    <p>Your activity will appear as you use SkillBridge.</p>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+
+    <div class="dash-col">
+        <section class="panel" aria-labelledby="readiness-heading">
+            <div class="panel-head">
+                <div>
+                    <h2 id="readiness-heading">Career readiness</h2>
+                    <p>{{ report.band }}</p>
+                </div>
+                <a class="btn btn-outline btn-sm" href="{{ url_for('readiness.report') }}">Full report</a>
+            </div>
+            <div class="dash-readiness">
+                <div id="chart-readiness" data-chart="ring"
+                     data-percent="{{ report.overall }}"
+                     data-label="{{ report.overall }}%"
+                     data-caption="readiness"
+                     data-size="150" data-stroke="12"></div>
+                <ul class="dash-metrics">
+                    {% for part in report.components %}
+                    <li><span>{{ part.label }}</span><strong>{{ part.score|round|int }}%</strong></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+
+        <section class="panel" aria-labelledby="career-heading">
+            <div class="panel-head">
+                <div>
+                    <h2 id="career-heading">Career goal</h2>
+                    {% if career_gap %}
+                    <p>{{ career_gap.career.title }} · {{ career_gap.percentage }}% of its required skills covered</p>
+                    {% else %}
+                    <p>Choose a career path to compare its skills with your own.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% if career_gap %}
+            <div class="progress" role="img" aria-label="{{ career_gap.percentage }} percent of {{ career_gap.career.title }} skills covered">
+                <span class="progress-fill" style="--fill: {{ career_gap.percentage }}%"></span>
+            </div>
+            <p class="sb-muted sb-small" style="margin: 0.6rem 0 0;">{{ career_gap.counts["Acquired"] }} acquired · {{ career_gap.counts["Learning"] }} learning · {{ career_gap.counts["Missing"] }} not started</p>
+            {% else %}
+            <a class="btn btn-primary btn-sm" href="{{ url_for('career.choose_career') }}">Choose a career path</a>
+            {% endif %}
+        </section>
+
+        <section class="panel" aria-labelledby="roadmap-heading">
+            <div class="panel-head">
+                <div>
+                    <h2 id="roadmap-heading">Career roadmap</h2>
+                    {% if roadmap_view %}
+                    <p>{{ roadmap_view.roadmap.title }} · {{ roadmap_view.completed }} of {{ roadmap_view.total }} steps complete</p>
+                    {% else %}
+                    <p>Follow a step-by-step plan for the career you chose.</p>
+                    {% endif %}
+                </div>
+                <a class="btn btn-outline btn-sm" href="{{ url_for('roadmap.view_roadmap') }}">Open roadmap</a>
+            </div>
+            {% if roadmap_view %}
+            <div class="progress" role="img" aria-label="{{ roadmap_view.percentage }} percent of the {{ roadmap_view.roadmap.title }} roadmap complete">
+                <span class="progress-fill" style="--fill: {{ roadmap_view.percentage }}%"></span>
+            </div>
+            <p class="sb-muted sb-small" style="margin: 0.6rem 0 0;">{% if roadmap_view.next_step %}Next step: {{ roadmap_view.next_step.title }}{% else %}All steps complete — keep building projects.{% endif %}</p>
+            {% endif %}
+        </section>
+
+        <section class="panel" aria-labelledby="week-heading">
+            <div class="panel-head">
+                <div>
+                    <h2 id="week-heading">This week</h2>
+                    <p>{{ week_total }} activity event{% if week_total != 1 %}s{% endif %} in the last 7 days</p>
+                </div>
+            </div>
+            <div id="chart-week" data-chart="spark"
+                 data-values='{{ week_values|tojson }}'
+                 data-labels='{{ week_labels|tojson }}'></div>
+            <p class="sb-muted sb-small" style="margin: 0.5rem 0 0;">{{ week_labels|join(" · ") }}</p>
+        </section>
+
+        <section class="panel" aria-labelledby="upcoming-heading">
+            <div class="panel-head">
+                <div>
+                    <h2 id="upcoming-heading">Upcoming goals</h2>
+                    <p>The nearest deadlines you have set.</p>
+                </div>
+                <a class="btn btn-outline btn-sm" href="{{ url_for('goals.list_goals') }}">All goals</a>
+            </div>
+            {% if upcoming_goals %}
+            <ul class="dash-list">
+                {% for goal in upcoming_goals %}
+                <li>
+                    <span class="dash-list-title">{{ goal["title"] }}</span>
+                    <span class="dash-list-meta"><span class="badge badge-neutral">{{ goal["goal_type"] }}</span> Due {{ goal["target_date"]|date_label }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">{{ icon("flag", 20) }}</span>
+                <div>
+                    <h3>No upcoming goals</h3>
+                    <p>Goals that are due soon will appear here.</p>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}
